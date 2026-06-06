@@ -1,5 +1,5 @@
 plugins {
-    id 'net.neoforged.moddev' version '2.0.141'
+    id 'net.neoforged.moddev'
 }
 
 sourceSets.main.resources {
@@ -14,6 +14,13 @@ base {
 
 neoForge {
     version = neo_version
+
+    mods {
+        "${mod_id}" {
+            sourceSet(sourceSets.main)
+            sourceSet(project(':common').sourceSets.main)
+        }
+    }
 
     runs {
         client {
@@ -36,39 +43,25 @@ neoForge {
     }
 }
 
-
 configurations {
     runtimeClasspath.extendsFrom localRuntime
 }
 
-    sourceSets {
-        main {
-            java {
-                srcDirs project(':common').sourceSets.main.java.srcDirs
-            }
-            resources {
-                srcDirs project(':common').sourceSets.main.resources.srcDirs
-            }
-        }
-    }
+dependencies {
+    implementation project(path: ':common', configuration: 'namedElements')
 
-
-    dependencies {
-        implementation project(path: ':common', configuration: 'namedElements')
-
-        compileOnly "es.pyronixstudio:Util:${utilLib}"
-        compileOnly fileTree(dir: "${rootDir}/libs", include: ['*.jar'])
-        implementation fileTree(dir: "${rootDir}/depend", include: ['*.jar'])
-    }
-
+    compileOnly "es.pyronixstudio:Util:${utilLib}"
+    compileOnly fileTree(dir: "${rootDir}/libs", include: ['*.jar'])
+    implementation fileTree(dir: "${rootDir}/depend", include: ['*.jar'])
+}
 
 var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
     var replaceProperties = [
-            mod_id          : mod_id,
-            mod_name        : mod_name,
-            mod_license     : mod_license,
-            mod_version     : mod_version,
-            neo_version     : neo_version,
+            mod_id                  : mod_id,
+            mod_name                : mod_name,
+            mod_license             : mod_license,
+            mod_version             : mod_version,
+            neo_version             : neo_version,
             loader_version_range    : loader_version_range,
             minecraft_version_range : minecraft_version_range,
     ]

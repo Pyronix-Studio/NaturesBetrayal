@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "es.pyronixstudio.natures_betrayal.common.mixins",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "mobs.MobGoalMixin",
+    "mobs.MobAttributeMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
