@@ -1,0 +1,32 @@
+plugins {
+    id 'fabric-loom' version "${fabric_loom_version}" apply false
+    id 'net.neoforged.moddev' version "${neoforge_mdg_version}" apply false
+}
+
+subprojects {
+    apply plugin: 'java'
+
+    group = mod_group
+    version = mod_version
+
+    repositories {
+        mavenCentral()
+        maven { url = 'https://maven.fabricmc.net/' }
+        maven { url = 'https://maven.neoforged.net/releases' }
+        maven {
+            name = 'Pyronix'
+            url = 'https://maven.pyronixstudio.es/'
+        }
+    }
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(project.java_version as int)
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        it.options.release = project.java_version as int
+        it.options.encoding = 'UTF-8'
+    }
+}

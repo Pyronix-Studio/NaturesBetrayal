@@ -1,0 +1,20 @@
+plugins {
+    id 'fabric-loom'
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+
+    modCompileOnly "net.fabricmc:fabric-loader:${fabric_loader_version}"
+
+    compileOnly "es.pyronixstudio:Util:${utilLib}"
+    compileOnly fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(dir: 'depend', include: ['*.jar'])
+}
+
+loom {
+    runConfigs.configureEach {
+        ideConfigGenerated = false
+    }
+}

@@ -1,0 +1,43 @@
+@Library('pyronix-libs') _
+pipeline {
+    agent any
+    stages {
+        stage('Build Common') {
+            steps {
+                script { notifyDiscord('STARTED') }
+                sh 'chmod +x gradlew'
+                ansiColor('xterm') {
+                    sh './gradlew clean :common:build'
+                }
+            }
+        }
+        stage('Build NeoForge') {
+            steps {
+                ansiColor('xterm') {
+                    sh './gradlew :neoforge:build'
+                }
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'neoforge/build/libs/*.jar', allowEmptyArchive: false
+                }
+            }
+        }
+        stage('Build Fabric') {
+            steps {
+                ansiColor('xterm') {
+                    sh './gradlew :fabric:build'
+                }
+            }
+            post {
+                success {
+                    archiveArtifacts artifacts: 'fabric/build/libs/*.jar', allowEmptyArchive: false
+                }
+            }
+        }
+    }
+    post {
+        success { notifyDiscord('SUCCESS') }
+        failure { notifyDiscord('FAILURE') }
+    }
+}

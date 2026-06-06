@@ -1,0 +1,54 @@
+plugins {
+    id 'fabric-loom'
+}
+
+base {
+    archivesName = mod_id
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs project(':common').sourceSets.main.java.srcDirs
+        }
+        resources {
+            srcDirs project(':common').sourceSets.main.resources.srcDirs
+        }
+    }
+}
+
+loom {
+    runConfigs.configureEach {
+        ideConfigGenerated = true
+    }
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
+
+    implementation project(path: ':common', configuration: 'namedElements')
+
+    compileOnly "es.pyronixstudio:Util:${utilLib}"
+    compileOnly fileTree(dir: "${rootDir}/libs", include: ['*.jar'])
+    implementation fileTree(dir: "${rootDir}/depend", include: ['*.jar'])
+}
+
+processResources {
+    def props = [
+            version                 : mod_version,
+            mod_id                  : mod_id,
+            mod_name                : mod_name,
+            mod_license             : mod_license,
+            fabric_loader_version   : fabric_loader_version,
+            fabric_api_version      : fabric_api_version,
+            minecraft_version       : minecraft_version,
+            java_version            : java_version,
+    ]
+    inputs.properties props
+    filesMatching("fabric.mod.json") {
+        expand props
+    }
+}

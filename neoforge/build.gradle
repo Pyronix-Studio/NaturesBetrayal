@@ -1,0 +1,81 @@
+plugins {
+    id 'net.neoforged.moddev' version '2.0.141'
+}
+
+sourceSets.main.resources {
+    srcDir('src/generated/resources')
+    exclude("**/*.bbmodel")
+    exclude("src/generated/**/.cache")
+}
+
+base {
+    archivesName = mod_id
+}
+
+neoForge {
+    version = neo_version
+
+    runs {
+        client {
+            client()
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+        server {
+            server()
+            programArgument '--nogui'
+            systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
+        }
+        data {
+            data()
+            programArguments.addAll '--mod', mod_id, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+        }
+        configureEach {
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            logLevel = org.slf4j.event.Level.DEBUG
+        }
+    }
+}
+
+
+configurations {
+    runtimeClasspath.extendsFrom localRuntime
+}
+
+    sourceSets {
+        main {
+            java {
+                srcDirs project(':common').sourceSets.main.java.srcDirs
+            }
+            resources {
+                srcDirs project(':common').sourceSets.main.resources.srcDirs
+            }
+        }
+    }
+
+
+    dependencies {
+        implementation project(path: ':common', configuration: 'namedElements')
+
+        compileOnly "es.pyronixstudio:Util:${utilLib}"
+        compileOnly fileTree(dir: "${rootDir}/libs", include: ['*.jar'])
+        implementation fileTree(dir: "${rootDir}/depend", include: ['*.jar'])
+    }
+
+
+var generateModMetadata = tasks.register("generateModMetadata", ProcessResources) {
+    var replaceProperties = [
+            mod_id          : mod_id,
+            mod_name        : mod_name,
+            mod_license     : mod_license,
+            mod_version     : mod_version,
+            neo_version     : neo_version,
+            loader_version_range    : loader_version_range,
+            minecraft_version_range : minecraft_version_range,
+    ]
+    inputs.properties replaceProperties
+    expand replaceProperties
+    from "src/main/templates"
+    into "build/generated/sources/modMetadata"
+}
+sourceSets.main.resources.srcDir generateModMetadata
+neoForge.ideSyncTask generateModMetadata
