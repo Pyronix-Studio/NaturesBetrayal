@@ -2,10 +2,13 @@
 pipeline {
     agent any
     stages {
-        stage('Build Common') {
+        stage('Notify Discord Start') {
             steps {
                 script { notifyDiscord('STARTED') }
-                sh 'chmod +x gradlew'
+            }
+        }
+        stage('Build Common') {
+            steps {
                 ansiColor('xterm') {
                     sh './gradlew clean :common:build'
                 }
@@ -13,8 +16,10 @@ pipeline {
         }
         stage('Build NeoForge') {
             steps {
-                ansiColor('xterm') {
-                    sh './gradlew :neoforge:build'
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    ansiColor('xterm') {
+                        sh './gradlew :fabric:build'
+                    }
                 }
             }
             post {

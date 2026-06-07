@@ -3,7 +3,7 @@ plugins {
 }
 
 base {
-    archivesName = mod_id
+    archivesName = "${mod_id}-fabric"
 }
 
 sourceSets {
@@ -38,7 +38,7 @@ dependencies {
 
 processResources {
     def props = [
-            version                 : mod_version,
+            version                 : project.version,
             mod_id                  : mod_id,
             mod_name                : mod_name,
             mod_license             : mod_license,

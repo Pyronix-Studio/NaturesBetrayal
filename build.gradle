@@ -3,12 +3,28 @@ plugins {
     id 'net.neoforged.moddev' version "${neoforge_mdg_version}" apply false
 }
 
+def versionPropsFile = file("version.properties")
+def versionProps = new Properties()
+if (versionPropsFile.exists()) {
+    versionProps.load(new FileInputStream(versionPropsFile))
+} else {
+    versionProps["major"] = "1"
+    versionProps["minor"] = "0"
+    versionProps["patch"] = "0"
+    versionProps.store(versionPropsFile.newWriter(), null)
+}
+
+def major = versionProps["major"].toInteger()
+def minor = versionProps["minor"].toInteger()
+def patch = versionProps["patch"].toInteger()
+def baseVersion = "${major}.${minor}.${patch}"
+def buildNumber = System.getenv("BUILD_NUMBER") ?: "0"
+def computedVersion = "${baseVersion}+${buildNumber}"
+
 subprojects {
     apply plugin: 'java'
-
     group = mod_group
-    version = mod_version
-
+    version = computedVersion
     repositories {
         mavenCentral()
         maven { url = 'https://maven.fabricmc.net/' }
@@ -18,13 +34,11 @@ subprojects {
             url = 'https://maven.pyronixstudio.es/'
         }
     }
-
     java {
         toolchain {
             languageVersion = JavaLanguageVersion.of(project.java_version as int)
         }
     }
-
     tasks.withType(JavaCompile).configureEach {
         it.options.release = project.java_version as int
         it.options.encoding = 'UTF-8'
