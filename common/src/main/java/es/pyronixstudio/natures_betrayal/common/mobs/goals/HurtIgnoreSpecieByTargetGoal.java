@@ -1,8 +1,7 @@
-package es.pyronixstudio.natures_betrayal.common.goals;
+package es.pyronixstudio.natures_betrayal.common.mobs.goals;
 
-import es.pyronixstudio.util.util.CastUtil;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySelector;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
@@ -25,13 +24,16 @@ public class HurtIgnoreSpecieByTargetGoal extends HurtByTargetGoal {
         Iterator<Entity> it = list.iterator();
         while(it.hasNext()){
             Entity entity = it.next();
-            if(!(entity instanceof Mob mob)) {
+            if(!(entity instanceof Mob mobAllied)) {
                 it.remove();
                 continue;
             }
 
+            LivingEntity hurtted = this.mob.getLastHurtByMob();
+            if(hurtted == null)
+                continue;
 
-            this.alertOther(mob, this.mob.getLastHurtByMob());
+            this.alertOther(mobAllied, hurtted);
         }
 
     }

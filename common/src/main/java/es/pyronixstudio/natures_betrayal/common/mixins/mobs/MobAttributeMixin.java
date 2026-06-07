@@ -13,7 +13,7 @@ public class MobAttributeMixin {
 
     @Inject(method = "createMobAttributes", at = @At("RETURN"))
     private static void naturesBetrayal$createMobAttributes(CallbackInfoReturnable<AttributeSupplier.Builder> cir){
-        cir.getReturnValue().add(Attributes.ATTACK_DAMAGE).add(Attributes.FOLLOW_RANGE);
+        cir.getReturnValue().add(Attributes.ATTACK_DAMAGE);
     }
 
 }

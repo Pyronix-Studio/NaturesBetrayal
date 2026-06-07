@@ -19,10 +19,3 @@ loom {
         ideConfigGenerated = false
     }
 }
-
-idea {
-    module {
-        downloadSources = true
-        downloadJavadoc = true
-    }
-}
