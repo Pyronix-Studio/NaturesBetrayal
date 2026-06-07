@@ -18,7 +18,7 @@ pipeline {
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     ansiColor('xterm') {
-                        sh './gradlew :fabric:build'
+                        sh './gradlew :neoforge:build'
                     }
                 }
             }
