@@ -28,6 +28,19 @@ public interface IHostibilityInjector {
         }
     }
 
+    default WrappedGoal cutWrappedGoal(GoalSelector goalSelector, Class<? extends Goal> goalClazz){
+        List<WrappedGoal> existing = new ArrayList<>(goalSelector.getAvailableGoals());
+        for(WrappedGoal wrappedGoal : existing){
+            Goal goal = wrappedGoal.getGoal();
+            if(goalClazz.isInstance(goal)){
+                goalSelector.removeGoal(goal);
+                return wrappedGoal;
+            }
+
+        }
+        return null;
+    }
+
     default void desplazarGoals(int cantidad, GoalSelector goalSelector) {
         List<WrappedGoal> existing = new ArrayList<>(goalSelector.getAvailableGoals());
 
