@@ -2,7 +2,6 @@ package es.pyronixstudio.natures_betrayal.common.mobs.goals;
 
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.phys.AABB;
@@ -24,7 +23,8 @@ public class HurtIgnoreSpecieByTargetGoal extends HurtByTargetGoal {
         Iterator<Entity> it = list.iterator();
         while(it.hasNext()){
             Entity entity = it.next();
-            if(!(entity instanceof Mob mobAllied)) {
+            //Si no es un PathfinderMob no sirve de nada mandarlo a target
+            if(!(entity instanceof PathfinderMob mobAllied)) {
                 it.remove();
                 continue;
             }

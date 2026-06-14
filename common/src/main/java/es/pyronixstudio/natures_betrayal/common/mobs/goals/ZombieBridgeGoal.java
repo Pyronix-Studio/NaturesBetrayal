@@ -1,10 +1,10 @@
 package es.pyronixstudio.natures_betrayal.common.mobs.goals;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.level.block.Blocks;
 
 import java.util.EnumSet;
@@ -62,8 +62,9 @@ public class ZombieBridgeGoal extends Goal {
             return;
 
         if (mob.level().getBlockState(above).isAir()) {
+            mob.jumpFromGround();
+            mob.swing(InteractionHand.MAIN_HAND);
             mob.level().setBlockAndUpdate(mobPos, Blocks.DIRT.defaultBlockState());
-            mob.teleportTo(above.getX() + 0.5, above.getY(), above.getZ()+0.5);
             cooldown = 10; // medio segundo entre bloques
         }
     }

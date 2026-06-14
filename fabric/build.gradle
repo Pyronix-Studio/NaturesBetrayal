@@ -30,6 +30,8 @@ dependencies {
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_api_version}"
 
     implementation project(path: ':common', configuration: 'namedElements')
+    implementation include("com.electronwill.night-config:toml:3.9.0")
+    implementation include("com.electronwill.night-config:core:3.9.0")
 
     compileOnly "es.pyronixstudio:Util:${utilLib}"
     compileOnly fileTree(dir: "${rootDir}/libs", include: ['*.jar'])
