@@ -56,6 +56,5 @@ public interface IHostibilityInjector {
     default void setDefaultAttributes(Mob mob){
         AttributeMap attributeMap = mob.getAttributes();
         attributeMap.getInstance(Attributes.ATTACK_DAMAGE).setBaseValue(2.0D);
-        attributeMap.getInstance(Attributes.FOLLOW_RANGE).setBaseValue(200);
     }
 }
