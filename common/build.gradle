@@ -11,8 +11,8 @@ dependencies {
 
     compileOnly "es.pyronixstudio:Util:${utilLib}"
 
-    compileOnly include("com.electronwill.night-config:toml:3.9.0")
-    compileOnly include("com.electronwill.night-config:core:3.9.0")
+    compileOnly "com.electronwill.night-config:toml:3.9.0"
+    compileOnly "com.electronwill.night-config:core:3.9.0"
 
     compileOnly fileTree(dir: 'libs', include: ['*.jar'])
     implementation fileTree(dir: 'depend', include: ['*.jar'])
