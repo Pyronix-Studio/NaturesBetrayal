@@ -14,6 +14,16 @@ import java.util.function.Supplier;
 
 public class HostibilityInjectorManager {
 
+    private static HostibilityInjectorManager INSTANCE;
+
+    public static HostibilityInjectorManager getManager() {
+        if (INSTANCE == null) {
+            INSTANCE = new HostibilityInjectorManager();
+        }
+        return INSTANCE;
+    }
+
+
     private final Set<IClassTypeInjector> specificHostibilyInjector = new HashSet<>();
 
     private void registerInjector(Supplier<IClassTypeInjector> supplier) {
@@ -40,7 +50,6 @@ public class HostibilityInjectorManager {
                 if (!classTypeInjector.instance(pathfinderMob))
                     continue;
                 classTypeInjector.inject(pathfinderMob, goalSelector, targetSelector, entityType, level);
-                break;
             }
 
         }

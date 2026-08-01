@@ -1,4 +1,4 @@
-package es.pyronixstudio.natures_betrayal.fabric.config;
+package es.pyronixstudio.natures_betrayal.common.config;
 
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 

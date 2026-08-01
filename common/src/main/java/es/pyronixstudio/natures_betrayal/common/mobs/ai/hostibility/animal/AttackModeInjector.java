@@ -17,11 +17,11 @@ public class AttackModeInjector implements IClassTypeDelegateInjector {
     private final IHostibilityInjector animalGenericHostibilityInjector;
 
     public AttackModeInjector(){
-        EnumAttackMode attackMode  = NaturesBetrayalConfig.get().attackMode();
+        EnumAttackMode attackMode  = NaturesBetrayalConfig.ATTACK_MODE.get();
         animalGenericHostibilityInjector = switch (attackMode){
             case ALL -> new AgressiveInjector();
-            case RADIUS -> new NeutralInjector();
-            case SPECIES -> new NeutralHordeInjector();
+            case RADIUS -> new NeutralHordeInjector();
+            case SPECIES -> new NeutralInjector();
         };
 
     }

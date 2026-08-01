@@ -1,10 +1,9 @@
 package es.pyronixstudio.natures_betrayal.common;
 
-import es.pyronixstudio.natures_betrayal.common.config.IModConfig;
+import java.nio.file.Path;
 
 public interface IModLoader {
 
-    IModConfig config();
-
+    Path getConfigBasePath();
 
 }

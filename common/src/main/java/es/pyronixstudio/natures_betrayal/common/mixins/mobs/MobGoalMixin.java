@@ -19,20 +19,13 @@ public abstract class MobGoalMixin {
     @Shadow
     protected GoalSelector goalSelector;
 
-    private static HostibilityInjectorManager hostibilityInjectorManager;
 
-    private static HostibilityInjectorManager getManager() {
-        if (hostibilityInjectorManager == null) {
-            hostibilityInjectorManager = new HostibilityInjectorManager();
-        }
-        return hostibilityInjectorManager;
-    }
     @Inject(method = "<init>", at = @At("TAIL"))
     private void naturesBetrayal$registerGoals(EntityType<?> entityType, Level level, CallbackInfo callbackInfo) {
         if(level.isClientSide())
             return;
         Mob self = (Mob) (Object) this;
-        getManager().inject(self, goalSelector, targetSelector, entityType, level);
+        HostibilityInjectorManager.getManager().inject(self, goalSelector, targetSelector, entityType, level);
 
     }
 

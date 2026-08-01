@@ -1,8 +1,10 @@
 package es.pyronixstudio.natures_betrayal.common;
 
 import com.mojang.logging.LogUtils;
-import es.pyronixstudio.natures_betrayal.common.config.NaturesBetrayalConfig;
-import org.slf4j.Logger;
+import es.pyronixstudio.natures_betrayal.common.config.NaturesBetrayalConfig;import org.slf4j.Logger;
+
+import java.io.File;
+import java.nio.file.Path;
 
 public class NaturesBetrayal {
 
@@ -23,6 +25,17 @@ public class NaturesBetrayal {
 
 
     public static void onFinishPreInitialization() {
-        NaturesBetrayalConfig.register(INSTANCE.iModLoader.config());
+        new NaturesBetrayalConfig(resolveConfigPath());
     }
+
+    private static Path resolveConfigPath(){
+        Path modConfigFolder =  INSTANCE.iModLoader.getConfigBasePath().resolve(NaturesBetrayal.MOD_ID);
+        File modConfigFolderFile = modConfigFolder.toFile();
+
+        if(!modConfigFolderFile.exists())
+            modConfigFolderFile.mkdir();
+
+        return modConfigFolder.resolve(NaturesBetrayal.MOD_ID+".toml");
+    }
+
 }

@@ -17,7 +17,7 @@ public class TargetRadiusInjector implements IClassTypeInjector {
     public void inject(PathfinderMob mob, GoalSelector goalSelector, GoalSelector targetSelector, EntityType<?> entityType, Level level) {
         AttributeInstance attributeInstance = mob.getAttribute(Attributes.FOLLOW_RANGE);
             if(attributeInstance != null)
-                attributeInstance.setBaseValue(NaturesBetrayalConfig.get().targetRadius());
+                attributeInstance.setBaseValue(NaturesBetrayalConfig.TARGET_RADIUS.get());
     }
 
     @Override

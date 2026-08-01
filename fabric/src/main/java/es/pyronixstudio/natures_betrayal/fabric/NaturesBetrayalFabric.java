@@ -2,10 +2,10 @@ package es.pyronixstudio.natures_betrayal.fabric;
 
 import es.pyronixstudio.natures_betrayal.common.IModLoader;
 import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
-import es.pyronixstudio.natures_betrayal.common.config.IModConfig;
-import es.pyronixstudio.natures_betrayal.fabric.config.FabricConfig;
-import es.pyronixstudio.natures_betrayal.fabric.config.FabricConfigBridge;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
+
+import java.nio.file.Path;
 
 
 public class NaturesBetrayalFabric implements ModInitializer, IModLoader {
@@ -13,12 +13,11 @@ public class NaturesBetrayalFabric implements ModInitializer, IModLoader {
     @Override
     public void onInitialize() {
         NaturesBetrayal.initialize(this);
-        FabricConfig.registrar();
         NaturesBetrayal.onFinishPreInitialization();
     }
 
     @Override
-    public IModConfig config() {
-        return new FabricConfigBridge();
+    public Path getConfigBasePath() {
+        return FabricLoader.getInstance().getConfigDir();
     }
 }
