@@ -18,6 +18,6 @@ public class NeutralInjector implements IHostibilityInjector {
         setDefaultAttributes(mob);
 
         goalSelector.addGoal(0, new MeleeAttackGoal(mob, 1.2D, true));
-        targetSelector.addGoal(0,new HurtByTargetGoal(mob));
+        targetSelector.addGoal(0,new HurtByTargetGoal(mob).setAlertOthers());
     }
 }
