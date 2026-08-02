@@ -21,7 +21,7 @@ public interface IHostibilityInjector {
         List<WrappedGoal> existing = new ArrayList<>(goalSelector.getAvailableGoals());
         for(WrappedGoal wrappedGoal : existing){
             Goal goal = wrappedGoal.getGoal();
-            if(goalClazz.isInstance(goal)){
+            if(goalClazz.isAssignableFrom(goal.getClass())){
                 goalSelector.removeGoal(goal);
             }
 

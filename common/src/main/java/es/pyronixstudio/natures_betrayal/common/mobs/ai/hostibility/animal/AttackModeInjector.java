@@ -7,12 +7,13 @@ import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.IHostibility
 import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.WaterAnimal;
+import net.minecraft.world.entity.monster.Spider;
 import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
 import net.minecraft.world.entity.npc.Villager;
 
 public class AttackModeInjector implements IClassTypeDelegateInjector {
 
-    private static final Class<?>[] TARGETS = new Class<?>[]{Animal.class, WaterAnimal.class, AbstractPiglin.class, NeutralMob.class, Villager.class};
+    private static final Class<?>[] TARGETS = new Class<?>[]{Animal.class, WaterAnimal.class, AbstractPiglin.class, NeutralMob.class, Spider.class, Villager.class};
 
     private final IHostibilityInjector animalGenericHostibilityInjector;
 
