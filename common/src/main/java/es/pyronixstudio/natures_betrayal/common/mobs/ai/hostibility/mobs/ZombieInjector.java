@@ -1,6 +1,7 @@
 package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs;
 
 import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.IClassTypeInjector;
+import es.pyronixstudio.natures_betrayal.common.mobs.goals.MobBreakGoal;
 import es.pyronixstudio.natures_betrayal.common.mobs.goals.ZombieBridgeGoal;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
@@ -21,14 +22,15 @@ public class ZombieInjector implements IClassTypeInjector {
 
     @Override
     public void inject(PathfinderMob mob, GoalSelector goalSelector, GoalSelector targetSelector, EntityType<?> entityType, Level level) {
-        desplazarGoals(1, goalSelector);
+        desplazarGoals(2, goalSelector);
         WrappedGoal zombieAttack = cutWrappedGoal(goalSelector, ZombieAttackGoal.class);
         if (zombieAttack != null) {
             int priority = zombieAttack.getPriority();
 
             //ASI  PONEMOS PRIORIDAD EL DE ATTACK Y LUEGO BRIDGE SI NO PUEDE
+            goalSelector.addGoal(3, new MobBreakGoal(mob));
+            //goalSelector.addGoal(1, new ZombieBridgeGoal(mob));
             goalSelector.addGoal(priority, zombieAttack.getGoal());
-            goalSelector.addGoal(priority - 1, new ZombieBridgeGoal(mob));
         }
     }
 }

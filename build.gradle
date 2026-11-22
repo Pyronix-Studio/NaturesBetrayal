@@ -31,7 +31,7 @@ subprojects {
         maven { url = 'https://maven.neoforged.net/releases' }
         maven {
             name = 'Pyronix'
-            url = 'https://maven.pyronixstudio.es/'
+            url = 'https://s3.pyronixstudio.es/maven'
         }
     }
     java {
