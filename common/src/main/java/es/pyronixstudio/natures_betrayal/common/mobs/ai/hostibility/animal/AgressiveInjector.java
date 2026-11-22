@@ -24,7 +24,6 @@ public class AgressiveInjector implements IHostibilityInjector {
         setDefaultAttributes(mob);
         goalSelector.addGoal(0, new MeleeAttackGoal(mob, 1.2D, true));
         targetSelector.addGoal(0, new NearestXRayAttackableTargetGoal<>(mob, Player.class, false, false));
-        goalSelector.addGoal(1, new MobBreakGoal(mob));
 
     }
 }

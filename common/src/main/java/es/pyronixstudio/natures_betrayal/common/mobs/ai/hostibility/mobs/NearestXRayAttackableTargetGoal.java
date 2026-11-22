@@ -3,7 +3,10 @@ package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.ai.targeting.TargetingConditions;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.EnumSet;
 import java.util.function.Predicate;
 
 public class NearestXRayAttackableTargetGoal<T extends LivingEntity> extends NearestAttackableTargetGoal<T> {

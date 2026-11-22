@@ -6,6 +6,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -42,7 +43,8 @@ public class ZombieBridgeGoal extends Goal {
         // Nunca si el target está más abajo
         if (vertDiff < 0) return false;
         if (horizDist > HORIZONTAL_RANGE) return false;
-        if (mob.getNavigation().isInProgress()) return false;
+        PathNavigation navigation = mob.getNavigation();
+        if (navigation.isInProgress() || !navigation.isDone()) return false;
 
         boolean needsVertical   = vertDiff >= 2 && vertDiff <= MAX_HEIGHT_DIFF;
         boolean needsHorizontal = vertDiff <= 1 && horizDist > 2.5;
