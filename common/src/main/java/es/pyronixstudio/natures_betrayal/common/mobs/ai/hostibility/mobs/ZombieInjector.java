@@ -44,6 +44,8 @@ public class ZombieInjector implements IClassTypeInjector {
             goalSelector.addGoal(priority, zombieAttack.getGoal());
             goalSelector.addGoal(priority+1, new MobBreakGoal(mob));
             goalSelector.addGoal(priority+2, new ZombieBridgeGoal(mob));
+            goalSelector.addGoal(priority+3, new PhantomRiderGoal(mob));
+
 
         }
     }

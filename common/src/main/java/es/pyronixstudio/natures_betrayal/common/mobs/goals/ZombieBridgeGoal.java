@@ -41,7 +41,7 @@ public class ZombieBridgeGoal extends Goal {
         double horizDist = horizontalDistanceTo(target);
 
         // Nunca si el target está más abajo
-        if (vertDiff < 0) return false;
+        if (vertDiff < 0 || vertDiff > 20) return false;
         if (horizDist > HORIZONTAL_RANGE) return false;
         PathNavigation navigation = mob.getNavigation();
         if (navigation.isInProgress() || !navigation.isDone()) return false;
