@@ -15,7 +15,7 @@ import java.util.EnumSet;
 public class ZombieBridgeGoal extends Goal {
 
     private static final int PLACE_COOLDOWN = 12;
-    private static final int MAX_HEIGHT_DIFF = 8;
+    private static final int MAX_HEIGHT_DIFF = 19;
     private static final double HORIZONTAL_RANGE = 16.0;
 
     private enum Phase { VERTICAL, HORIZONTAL }
@@ -41,7 +41,7 @@ public class ZombieBridgeGoal extends Goal {
         double horizDist = horizontalDistanceTo(target);
 
         // Nunca si el target está más abajo
-        if (vertDiff < 0 || vertDiff > 20) return false;
+        if (vertDiff < 0) return false;
         if (horizDist > HORIZONTAL_RANGE) return false;
         PathNavigation navigation = mob.getNavigation();
         if (navigation.isInProgress() || !navigation.isDone()) return false;

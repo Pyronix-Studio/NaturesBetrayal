@@ -27,19 +27,12 @@ public class ZombieInjector implements IClassTypeInjector {
 
     @Override
     public void inject(PathfinderMob mob, GoalSelector goalSelector, GoalSelector targetSelector, EntityType<?> entityType, Level level) {
-        borrarGoal(targetSelector, NearestAttackableTargetGoal.class); //borramos los nearest
-
         desplazarGoals(2, goalSelector);
         WrappedGoal zombieAttack = cutWrappedGoal(goalSelector, ZombieAttackGoal.class);
         if (zombieAttack != null) {
             int priority = zombieAttack.getPriority();
 
             //ASI  PONEMOS PRIORIDAD EL DE ATTACK Y LUEGO BRIDGE SI NO PUEDE
-
-            targetSelector.addGoal(2, new NearestXRayAttackableTargetGoal<>(mob, Player.class, true));
-            targetSelector.addGoal(3,  new NearestAttackableTargetGoal<>(mob, AbstractVillager.class, false));
-            targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(mob, IronGolem.class, true));
-            targetSelector.addGoal(5, new NearestAttackableTargetGoal(mob, Turtle.class, 10, true, false, Turtle.BABY_ON_LAND_SELECTOR));
 
             goalSelector.addGoal(priority, zombieAttack.getGoal());
             goalSelector.addGoal(priority+1, new MobBreakGoal(mob));

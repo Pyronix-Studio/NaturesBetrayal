@@ -1,7 +1,8 @@
 package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility;
 
 import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.animal.AttackModeInjector;
-import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs.TargetRadiusInjector;import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs.ZombieInjector;
+import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs.TargetRadiusInjector;
+import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs.ZombieInjector;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;

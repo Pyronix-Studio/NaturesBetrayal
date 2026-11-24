@@ -1,4 +1,4 @@
-package es.pyronixstudio.natures_betrayal.common.mixins.mobs;
+package es.pyronixstudio.natures_betrayal.common.mixins.mobs.injects;
 
 import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.HostibilityInjectorManager;
 import net.minecraft.world.entity.EntityType;

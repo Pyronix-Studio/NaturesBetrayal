@@ -34,5 +34,6 @@ public class CustomPhatomRenderer extends MobRenderer<CustomPhatom, CustomPhatom
                                   float partialTicks, float scale) {
         super.setupRotations(entity, stack, ageInTicks, rotationYaw, partialTicks, scale);
         stack.mulPose(Axis.XP.rotationDegrees(entity.getXRot()));
+        stack.mulPose(Axis.ZP.rotationDegrees(entity.getBank()));
     }
 }

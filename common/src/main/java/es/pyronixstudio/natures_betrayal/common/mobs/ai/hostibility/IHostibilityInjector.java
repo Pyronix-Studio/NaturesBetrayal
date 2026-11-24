@@ -41,6 +41,17 @@ public interface IHostibilityInjector {
         return null;
     }
 
+    default boolean containsGoal(GoalSelector goalSelector, Class<? extends Goal> goalClazz){
+        List<WrappedGoal> existing = new ArrayList<>(goalSelector.getAvailableGoals());
+        for(WrappedGoal wrappedGoal : existing) {
+            Goal goal = wrappedGoal.getGoal();
+            if (goalClazz.isInstance(goal)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     default void desplazarGoals(int cantidad, GoalSelector goalSelector) {
         List<WrappedGoal> existing = new ArrayList<>(goalSelector.getAvailableGoals());
 

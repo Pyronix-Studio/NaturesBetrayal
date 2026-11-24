@@ -1,8 +1,6 @@
 package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.FlyingMob;
@@ -10,40 +8,87 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.control.FlyingMoveControl;
-import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.navigation.FlyingPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.Level;
-import net.minecraft.util.Mth;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.level.pathfinder.Node;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Set;
+
+/**
+ * Phantom de transporte. Nunca se teletransporta: pide un path real al
+ * FlyNodeEvaluator vanilla y suelta al jinete solo cuando ha llegado.
+ */
 public class CustomPhatom extends FlyingMob {
+
+    @Nullable
+    private LivingEntity transportTarget;
+    @Nullable
+    private BlockPos landingPos;
+    @Nullable
+    private BlockPos returnPos;
+    private float bank;
+
+    @Nullable
+    private PhantomRiderGoal riderGoal;
+    @Nullable
+    private DeliverPassengerGoal deliverGoal;
 
     public CustomPhatom(EntityType<? extends FlyingMob> type, Level level) {
         super(type, level);
-        this.moveControl = new CustomFlyMoveControl(this);
+        this.moveControl = new PhantomFlyMoveControl(this);
+        this.setNoGravity(true);
+        this.setPersistenceRequired();
     }
-    // En CustomPhatom
-    @Nullable
-    private BlockPos landingPos;
 
-    public void setLandingMode(BlockPos pos) {
-        this.landingPos = pos;
+    public void setTransportTarget(@Nullable LivingEntity target) {
+        this.transportTarget = target;
+    }
+
+    @Nullable
+    public LivingEntity getTransportTarget() {
+        return transportTarget;
     }
 
     @Nullable
     public BlockPos getLandingPos() {
         return landingPos;
     }
+
+    public float getBank() {
+        return bank;
+    }
+
+    public void setBank(float bank) {
+        this.bank = bank;
+    }
+
+    public void setRiderGoal(@Nullable PhantomRiderGoal goal) {
+        this.riderGoal = goal;
+    }
+
+    /** Orden de regreso: vuela hasta este punto y entrega alli. */
+    public void setReturnPos(@Nullable BlockPos pos) {
+        this.returnPos = pos;
+        this.landingPos = null;
+        if (deliverGoal != null) {
+            deliverGoal.forceRepath = true;
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+        if (!level().isClientSide && riderGoal != null) {
+            riderGoal.checkDelivery(this);
+        }
+    }
+
     @Override
     protected PathNavigation createNavigation(Level level) {
-        FlyingPathNavigation nav = new FlyingPathNavigation(this, level);
-        nav.setCanOpenDoors(false);
-        nav.setCanFloat(true);
-        nav.setCanPassDoors(true);
-        return nav;
+        return new PhantomFlightNavigation(this, level);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -56,191 +101,153 @@ public class CustomPhatom extends FlyingMob {
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(1, new FlyToTargetGoal(this));
-    }
-
-    @Override
-    public boolean hurt(DamageSource src, float amount) { return false; }
-
-    @Override
-    protected SoundEvent getHurtSound(DamageSource src) { return null; }
-
-    @Override
-    protected SoundEvent getDeathSound() { return null; }
-
-    // -------------------------------------------------------
-    // MoveControl custom: solo rota en YAW, sin pitch
-    // -------------------------------------------------------
-
-    static class CustomFlyMoveControl extends MoveControl {
-
-        private final CustomPhatom mob;
-
-        CustomFlyMoveControl(CustomPhatom mob) {
-            super(mob);
-            this.mob = mob;
-        }
-
-        @Override
-        public void tick() {
-            if (this.operation != Operation.MOVE_TO) return;
-
-            this.operation = Operation.WAIT;
-
-            double dx = this.wantedX - mob.getX();
-            double dy = this.wantedY - mob.getY();
-            double dz = this.wantedZ - mob.getZ();
-            double distSqr = dx * dx + dy * dy + dz * dz;
-
-            if (distSqr < 1.0) return;
-
-            double dist = Math.sqrt(distSqr);
-
-            // velocidad desde atributo
-            double speed = mob.getAttributeValue(Attributes.FLYING_SPEED) * this.speedModifier;
-
-            // aplicar movimiento
-            mob.setDeltaMovement(
-                    mob.getDeltaMovement()
-                            .add(
-                                    (dx / dist) * speed * 0.1,
-                                    (dy / dist) * speed * 0.1,
-                                    (dz / dist) * speed * 0.1
-                            )
-            );
-
-            // limitar velocidad máxima
-            var vel = mob.getDeltaMovement();
-            double currentSpeed = vel.length();
-            if (currentSpeed > speed) {
-                mob.setDeltaMovement(vel.scale(speed / currentSpeed));
-            }
-
-            // rotar solo en YAW — sin tocar xRot para evitar el giro raro
-            float targetYaw = (float)(Mth.atan2(dz, dx) * (180.0 / Math.PI)) - 90.0f;
-            mob.setYRot(rotateTowards(mob.getYRot(), targetYaw, 10.0f));
-            mob.yBodyRot = mob.getYRot();
-        }
-
-        private static float rotateTowards(float current, float target, float maxStep) {
-            float diff = Mth.wrapDegrees(target - current);
-            if (diff > maxStep)  diff = maxStep;
-            if (diff < -maxStep) diff = -maxStep;
-            return current + diff;
-        }
-    }
-
-    public BlockPos findLandingPos() {
-        // Primero intentar al nivel del target
-        LivingEntity t = getTarget();
-        if (t == null) return blockPosition();
-
-        BlockPos targetPos = t.blockPosition();
-
-        // Buscar bloque sólido en un radio de 3 bloques alrededor del player
-        for (int r = 0; r <= 3; r++) {
-            for (int x = -r; x <= r; x++) {
-                for (int z = -r; z <= r; z++) {
-                    // Solo el borde del radio actual
-                    if (Math.abs(x) != r && Math.abs(z) != r) continue;
-
-                    BlockPos candidate = targetPos.offset(x, 0, z);
-
-                    // Buscar suelo hacia abajo desde la Y del player
-                    for (int y = 0; y >= -5; y--) {
-                        BlockPos ground = candidate.offset(0, y, 0);
-                        BlockPos above  = ground.above();
-                        BlockPos above2 = above.above();
-
-                        if (level().getBlockState(ground).isSolid()
-                                && level().getBlockState(above).isAir()
-                                && level().getBlockState(above2).isAir()) {
-                            return above; // posición donde aterrizar
-                        }
-                    }
-                }
-            }
-        }
-
-        // Fallback: misma Y que el player
-        return targetPos;
+        this.deliverGoal = new DeliverPassengerGoal();
+        this.goalSelector.addGoal(1, this.deliverGoal);
     }
 
     // -------------------------------------------------------
 
-    static class FlyToTargetGoal extends Goal {
+    class DeliverPassengerGoal extends Goal {
 
-        private static final double ARRIVE_DIST = 1.5;
+        private static final int REPATH_COOLDOWN = 20;
 
-        private final CustomPhatom phantom;
-        private LivingEntity target;
-
-        FlyToTargetGoal(CustomPhatom phantom) {
-            this.phantom = phantom;
-        }
+        @Nullable
+        private BlockPos requestedGoal;
+        @Nullable
+        private BlockPos activeGoal;
+        private int repathTimer;
+        private boolean forceRepath;
 
         @Override
         public boolean canUse() {
-            Entity passenger = phantom.getFirstPassenger();
-            if (passenger instanceof Mob mob) {
-                LivingEntity t = mob.getTarget();
-                if (t != null && t.isAlive()) {
-                    this.target = t;
-                    return true;
-                }
-            }
-            return false;
+            return returnPos != null || resolveTarget() != null;
         }
 
         @Override
         public boolean canContinueToUse() {
-            if (target == null || !target.isAlive()) return false;
-            double dx = target.getX() - phantom.getX();
-            double dy = target.getY() - phantom.getY();
-            double dz = target.getZ() - phantom.getZ();
-            return dx*dx + dy*dy + dz*dz > ARRIVE_DIST * ARRIVE_DIST;
+            return landingPos == null;
+        }
+
+        @Override
+        public void start() {
+            requestedGoal = null;
+            activeGoal = null;
+            repathTimer = 0;
+            forceRepath = false;
         }
 
         @Override
         public void tick() {
-            // Si hay landing pos, ir ahí en vez de al target
-            BlockPos landing = phantom.getLandingPos();
-            if (landing != null) {
-                phantom.getMoveControl().setWantedPosition(
-                        landing.getX() + 0.5,
-                        landing.getY(),
-                        landing.getZ() + 0.5,
-                        1.0
-                );
+            BlockPos requested = currentRequest();
+            if (requested == null) {
+                stopFlying();
                 return;
             }
 
-            if (target == null) return;
-            phantom.getMoveControl().setWantedPosition(
-                    target.getX(),
-                    target.getY() + 1.0,
-                    target.getZ(),
-                    1.0
-            );
+            PathNavigation nav = getNavigation();
+            if (forceRepath || activeGoal == null || !requested.equals(requestedGoal)) {
+                forceRepath = false;
+                requestedGoal = requested;
+                activeGoal = plan(nav, requested);
+                repathTimer = REPATH_COOLDOWN;
+            }
+
+            Path path = nav.getPath();
+            if (activeGoal != null && path != null && path.isDone()) {
+                // No hace falta clavarse en el nodo exacto: vale cualquier
+                // bloque seguro a 1-2 bloques del objetivo.
+                if (nav instanceof PhantomFlightNavigation flight
+                        && flight.isNearSafeSurface(activeGoal, blockPosition())) {
+                    landingPos = blockPosition();
+                    return;
+                }
+                if (--repathTimer <= 0) {
+                    repathTimer = REPATH_COOLDOWN;
+                    forceRepath = true;
+                }
+            } else if (path == null && activeGoal != null) {
+                // El path desaparecio (timeout/stuck): lo rehacemos ya mismo.
+                forceRepath = true;
+            } else if (activeGoal == null) {
+                if (--repathTimer <= 0) {
+                    repathTimer = REPATH_COOLDOWN;
+                    forceRepath = true;
+                }
+            }
         }
 
-        @Override
-        public void stop() {
-            target = null;
-            phantom.setDeltaMovement(phantom.getDeltaMovement().scale(0.0));
+        @Nullable
+        private BlockPos currentRequest() {
+            if (returnPos != null) {
+                return returnPos;
+            }
+            LivingEntity current = resolveTarget();
+            if (current == null) {
+                return null;
+            }
+            return current.getOnPos().above();
         }
-    }
 
-    // -------------------------------------------------------
+        /** Objetivo exacto alcanzable, o null. Nunca un camino truncado. */
+        @Nullable
+        private BlockPos plan(PathNavigation nav, BlockPos requested) {
+            if (!(nav instanceof PhantomFlightNavigation flight)) {
+                Path direct = nav.createPath(requested, 0);
+                if (endsAtOrAbove(direct, requested.getY())) {
+                    nav.moveTo(direct, 1.0);
+                    return requested;
+                }
+                stopFlying();
+                return null;
+            }
 
-    private double distSqr() {
-        return 0;
-    }
+            BlockPos goal = flight.findLandingTarget(requested);
+            Path path = goal == null ? null : flight.pathTo(Set.of(goal));
+            BlockPos chosen = goal;
 
-    static double distSqr(CustomPhatom phantom, LivingEntity target) {
-        double dx = target.getX() - phantom.getX();
-        double dy = target.getY() - phantom.getY();
-        double dz = target.getZ() - phantom.getZ();
-        return dx * dx + dy * dy + dz * dz;
+            if (!endsAtOrAbove(path, requested.getY())) {
+                BlockPos high = flight.findHighestSafeSurface(requested);
+                if (high != null) {
+                    Path fallback = flight.pathTo(Set.of(high));
+                    if (endsAtOrAbove(fallback, requested.getY())) {
+                        path = fallback;
+                        chosen = high;
+                    }
+                }
+            }
+
+            if (endsAtOrAbove(path, requested.getY())) {
+                nav.moveTo(path, 1.0);
+                return chosen;
+            }
+            stopFlying();
+            return null;
+        }
+
+        /** Nunca aceptamos un camino que termine por debajo del jugador. */
+        private boolean endsAtOrAbove(Path path, int minY) {
+            if (path == null || !path.canReach()) {
+                return false;
+            }
+            Node end = path.getEndNode();
+            return end != null && end.y >= minY;
+        }
+
+        private void stopFlying() {
+            getNavigation().stop();
+            if (moveControl instanceof PhantomFlyMoveControl flight) {
+                flight.stop();
+            }
+            setDeltaMovement(getDeltaMovement().scale(0.5D));
+        }
+
+        @Nullable
+        private LivingEntity resolveTarget() {
+            Entity passenger = getFirstPassenger();
+            if (passenger instanceof Mob mob && mob.getTarget() != null && mob.getTarget().isAlive()) {
+                return mob.getTarget();
+            }
+            return transportTarget != null && transportTarget.isAlive() ? transportTarget : null;
+        }
     }
 }
