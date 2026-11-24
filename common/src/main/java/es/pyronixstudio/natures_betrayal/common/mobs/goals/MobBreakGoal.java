@@ -6,6 +6,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.BlockCollisions;
 import net.minecraft.world.level.Level;
@@ -68,12 +69,10 @@ public class MobBreakGoal extends Goal {
 
         AABB mobBox = mob.getBoundingBox();
 
-        int yExpanded = 0;
+        int yExpanded = 1;
         double yDifference = target.getY() - mob.getY();
 
-        if(yDifference > 0)
-            yExpanded=1;
-        else if(yDifference < 0)
+         if(yDifference < 0)
             yExpanded=-1;
 
         AABB expanded = mobBox.expandTowards(horizontal.x, yExpanded, horizontal.z);

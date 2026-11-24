@@ -46,7 +46,7 @@ public class ZombieBridgeGoal extends Goal {
         PathNavigation navigation = mob.getNavigation();
         if (navigation.isInProgress() || !navigation.isDone()) return false;
 
-        boolean needsVertical   = vertDiff >= 2 && vertDiff <= MAX_HEIGHT_DIFF;
+        boolean needsVertical   = vertDiff >= 1 && vertDiff <= MAX_HEIGHT_DIFF;
         boolean needsHorizontal = vertDiff <= 1 && horizDist > 2.5;
 
         if (!needsVertical && !needsHorizontal) return false;

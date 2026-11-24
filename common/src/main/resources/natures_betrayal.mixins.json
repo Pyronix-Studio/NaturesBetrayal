@@ -3,11 +3,13 @@
   "package": "es.pyronixstudio.natures_betrayal.common.mixins",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "mobs.accessor.NearestAttackableTargetGoalAcessor",
     "mobs.injects.MobAttributeMixin",
     "mobs.injects.MobGoalMixin",
     "mobs.injects.NearestAttackableTargetGoalMixin",
-    "mobs.injects.SpiderTargetGoalMixin"
+    "mobs.injects.MeleeAttackGoalMixin",
+
+    "mobs.injects.SpiderTargetGoalMixin",
+    "mobs.injects.SwellGoalMixin"
   ],
   "injectors": {
     "defaultRequire": 1

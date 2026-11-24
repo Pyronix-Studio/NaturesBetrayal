@@ -18,7 +18,9 @@ public class AggressiveInjector implements IHostilityInjector {
         desplazarGoals(1, goalSelector);
 
         setDefaultAttributes(mob);
-        goalSelector.addGoal(0, new MeleeAttackGoal(mob, 1.2D, true));
+        if(!containsGoal(goalSelector, MeleeAttackGoal.class))
+            goalSelector.addGoal(0, new MeleeAttackGoal(mob, 1.2D, true));
+
         if(!containsGoal(targetSelector, NearestAttackableTargetGoal.class))
             targetSelector.addGoal(0, new NearestAttackableTargetGoal<>(mob, Player.class, false, false));
 

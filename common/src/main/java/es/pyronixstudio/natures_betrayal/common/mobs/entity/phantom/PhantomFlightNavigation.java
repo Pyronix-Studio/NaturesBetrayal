@@ -134,8 +134,9 @@ public class PhantomFlightNavigation extends PathNavigation {
     }
 
     /**
-     * El bloque actual es seguro y esta a 1-2 bloques del objetivo. Asi no hace
-     * falta clavarse en el nodo exacto para soltar al jinete.
+     * El bloque actual es seguro y esta cerca del objetivo. No hace falta
+     * clavarse en la coordenada exacta del nodo: basta una superficie segura
+     * a 1-2 bloques en horizontal y como mucho 1 bloque arriba/abajo.
      */
     public boolean isNearSafeSurface(BlockPos target, BlockPos here) {
         if (!isSafeSurface(here)) {
@@ -143,8 +144,8 @@ public class PhantomFlightNavigation extends PathNavigation {
         }
         double dx = here.getX() - target.getX();
         double dz = here.getZ() - target.getZ();
-        // Misma Y: solo nos movemos horizontalmente desde el nodo objetivo.
-        return here.getY() == target.getY() && dx * dx + dz * dz <= 4.0D;
+        double dy = here.getY() - target.getY();
+        return dx * dx + dz * dz <= 4.0D && Math.abs(dy) <= 1;
     }
 
     /** Suelo solido debajo + hueco para el phantom y el jinete. */

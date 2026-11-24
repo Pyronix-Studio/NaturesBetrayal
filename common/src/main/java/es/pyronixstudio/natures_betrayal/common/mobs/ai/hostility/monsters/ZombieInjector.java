@@ -31,8 +31,9 @@ public class ZombieInjector implements IClassTypeInjector {
             //ASI  PONEMOS PRIORIDAD EL DE ATTACK Y LUEGO BRIDGE SI NO PUEDE
 
             goalSelector.addGoal(priority, zombieAttack.getGoal());
-            goalSelector.addGoal(priority+1, new MobBreakGoal(mob));
-            goalSelector.addGoal(priority+2, new ZombieBridgeGoal(mob));
+            goalSelector.addGoal(priority+1, new ZombieBridgeGoal(mob));
+            goalSelector.addGoal(priority+2, new MobBreakGoal(mob));
+
             goalSelector.addGoal(priority+3, new PhantomRiderGoal(mob));
 
 

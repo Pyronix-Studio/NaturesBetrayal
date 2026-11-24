@@ -6,12 +6,19 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 public class PhantomRiderGoal extends Goal {
 
     private static final double TRIGGER_Y_DIFF = 20.0;
     private static final int COOLDOWN_TICKS = 120;
+    /** Distancia horizontal al objetivo para soltar sin esperar al bloque exacto. */
+    private static final double TARGET_DROP_RADIUS = 0.5D;
+    /** Tolerancia al volver a un bloque concreto (el punto de recogida). */
+    private static final double BLOCK_DROP_RADIUS = 1.0D;
+    /** Margen vertical: el phantom vuela algo por encima del objetivo. */
+    private static final double DROP_Y_TOLERANCE = 1.0D;
 
     private final Mob rider;
     private CustomPhantom phantom;
@@ -123,12 +130,50 @@ public class PhantomRiderGoal extends Goal {
             return;
         }
 
-        // Unico punto de entrega: el ultimo nodo del path que encontro el
-        // pathfinder. No se comprueba ni se busca una alternativa aqui.
+        // Nunca soltar en el aire: el bloque actual debe tener suelo solido
+        // debajo y hueco suficiente para el phantom y el jinete.
+        boolean safeHere = carrier.getNavigation() instanceof PhantomFlightNavigation flight
+                && flight.isSafeSurface(carrier.blockPosition());
+        if (!safeHere) return;
+
+        // Entrega anticipada: si ya esta fisicamente encima del sitio, soltar
+        // aunque el pathfinder no haya marcado el bloque de aterrizaje exacto.
+        if (isCloseToDropPoint(carrier)) {
+            deliverAt(carrier, carrier.blockPosition());
+            return;
+        }
+
+        // Si no, usamos el ultimo nodo seguro que encontro el pathfinder.
         BlockPos landing = carrier.getLandingPos();
         if (landing != null) {
             deliverAt(carrier, landing);
         }
+    }
+
+    /**
+     * Comprueba si el phantom esta lo bastante cerca del sitio de entrega. Con
+     * objetivo vivo se usa medio bloque de margen; al volver a un bloque
+     * concreto se permite un bloque, sin exigir la coordenada exacta. La
+     * superficie segura se comprueba aparte en {@link #checkDelivery}.
+     */
+    private boolean isCloseToDropPoint(CustomPhantom carrier) {
+        Vec3 destination;
+        double radius;
+        if (returning) {
+            if (origin == null) return false;
+            destination = Vec3.atCenterOf(origin);
+            radius = BLOCK_DROP_RADIUS;
+        } else {
+            if (target == null || !target.isAlive()) return false;
+            destination = target.position();
+            radius = TARGET_DROP_RADIUS;
+        }
+
+        double dx = carrier.getX() - destination.x;
+        double dy = carrier.getY() - destination.y;
+        double dz = carrier.getZ() - destination.z;
+        return dx * dx + dz * dz <= radius * radius
+                && Math.abs(dy) <= DROP_Y_TOLERANCE;
     }
 
     /** Objetivo perdido: el phantom vuela de vuelta al punto original con el jinete. */
