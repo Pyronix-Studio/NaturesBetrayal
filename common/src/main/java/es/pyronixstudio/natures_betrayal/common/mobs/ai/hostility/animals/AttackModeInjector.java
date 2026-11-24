@@ -1,9 +1,9 @@
-package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.animal;
+package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.animals;
 
 import es.pyronixstudio.natures_betrayal.common.config.NaturesBetrayalConfig;
-import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.EnumAttackMode;
-import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.IClassTypeDelegateInjector;
-import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.IHostibilityInjector;
+import es.pyronixstudio.natures_betrayal.common.mobs.ai.IClassTypeDelegateInjector;
+import es.pyronixstudio.natures_betrayal.common.mobs.ai.IHostilityInjector;
+import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.EnumAttackMode;
 import net.minecraft.world.entity.NeutralMob;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.animal.WaterAnimal;
@@ -15,12 +15,12 @@ public class AttackModeInjector implements IClassTypeDelegateInjector {
 
     private static final Class<?>[] TARGETS = new Class<?>[]{Animal.class, WaterAnimal.class, AbstractPiglin.class, NeutralMob.class, Spider.class, Villager.class};
 
-    private final IHostibilityInjector animalGenericHostibilityInjector;
+    private final IHostilityInjector animalGenericHostibilityInjector;
 
     public AttackModeInjector(){
         EnumAttackMode attackMode  = NaturesBetrayalConfig.ATTACK_MODE.get();
         animalGenericHostibilityInjector = switch (attackMode){
-            case ALL -> new AgressiveInjector();
+            case ALL -> new AggressiveInjector();
             case RADIUS -> new NeutralHordeInjector();
             case SPECIES -> new NeutralInjector();
         };
@@ -34,7 +34,7 @@ public class AttackModeInjector implements IClassTypeDelegateInjector {
     }
 
     @Override
-    public IHostibilityInjector delegate() {
+    public IHostilityInjector delegate() {
         return animalGenericHostibilityInjector;
     }
 }

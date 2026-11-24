@@ -1,4 +1,4 @@
-package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs;
+package es.pyronixstudio.natures_betrayal.common.mobs.entity.phantom;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.DebugPackets;

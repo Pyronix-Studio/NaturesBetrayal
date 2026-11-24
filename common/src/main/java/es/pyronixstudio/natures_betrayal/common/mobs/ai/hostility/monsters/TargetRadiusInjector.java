@@ -1,7 +1,7 @@
-package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs;
+package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.monsters;
 
 import es.pyronixstudio.natures_betrayal.common.config.NaturesBetrayalConfig;
-import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.IClassTypeInjector;
+import es.pyronixstudio.natures_betrayal.common.mobs.ai.IClassTypeInjector;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;

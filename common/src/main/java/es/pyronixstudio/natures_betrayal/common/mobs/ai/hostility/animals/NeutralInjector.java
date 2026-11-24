@@ -1,6 +1,6 @@
-package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.animal;
+package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.animals;
 
-import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.IHostibilityInjector;
+import es.pyronixstudio.natures_betrayal.common.mobs.ai.IHostilityInjector;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
@@ -9,7 +9,7 @@ import net.minecraft.world.entity.ai.goal.PanicGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.level.Level;
 
-public class NeutralInjector implements IHostibilityInjector {
+public class NeutralInjector implements IHostilityInjector {
     @Override
     public void inject(PathfinderMob mob, GoalSelector goalSelector, GoalSelector targetSelector, EntityType<?> entityType, Level level) {
         borrarGoal(goalSelector, PanicGoal.class);

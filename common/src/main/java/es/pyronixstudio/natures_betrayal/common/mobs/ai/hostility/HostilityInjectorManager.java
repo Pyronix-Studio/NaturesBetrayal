@@ -1,8 +1,9 @@
-package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility;
+package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility;
 
-import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.animal.AttackModeInjector;
-import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs.TargetRadiusInjector;
-import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs.ZombieInjector;
+import es.pyronixstudio.natures_betrayal.common.mobs.ai.IClassTypeInjector;
+import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.animals.AttackModeInjector;
+import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.monsters.TargetRadiusInjector;
+import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.monsters.ZombieInjector;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
@@ -13,13 +14,13 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Supplier;
 
-public class HostibilityInjectorManager {
+public class HostilityInjectorManager {
 
-    private static HostibilityInjectorManager INSTANCE;
+    private static HostilityInjectorManager INSTANCE;
 
-    public static HostibilityInjectorManager getManager() {
+    public static HostilityInjectorManager getManager() {
         if (INSTANCE == null) {
-            INSTANCE = new HostibilityInjectorManager();
+            INSTANCE = new HostilityInjectorManager();
         }
         return INSTANCE;
     }
@@ -41,7 +42,7 @@ public class HostibilityInjectorManager {
         registerInjector(AttackModeInjector::new);
     }
 
-    public HostibilityInjectorManager() {
+    public HostilityInjectorManager() {
         registersSpecificInjectors();
     }
 

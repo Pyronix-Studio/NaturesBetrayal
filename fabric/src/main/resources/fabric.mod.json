@@ -12,6 +12,9 @@
     "entrypoints": {
         "main": [
             "es.pyronixstudio.natures_betrayal.fabric.NaturesBetrayalFabric"
+        ],
+        "client": [
+            "es.pyronixstudio.natures_betrayal.fabric.NaturesBetrayalFabric"
         ]
     },
     "mixins": [

@@ -1,8 +1,8 @@
-package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility;
+package es.pyronixstudio.natures_betrayal.common.mobs.ai;
 
 import net.minecraft.world.entity.Mob;
 
-public interface IClassTypeInjector extends IHostibilityInjector{
+public interface IClassTypeInjector extends IHostilityInjector{
 
     Class<?>[] targets();
 

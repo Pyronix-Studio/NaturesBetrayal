@@ -13,7 +13,9 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 
 public class MobBreakGoal extends Goal {
@@ -62,23 +64,25 @@ public class MobBreakGoal extends Goal {
         LivingEntity target = mob.getTarget();
 
         Vec3 toTarget = target.position().subtract(mob.position());
-        Vec3 horizontal = new Vec3(toTarget.x, 0, toTarget.z).normalize();
+        Vec3 horizontal = new Vec3(toTarget.x, -1, toTarget.z).normalize();
 
         AABB mobBox = mob.getBoundingBox();
 
-        // Expansión horizontal como antes
-        AABB expanded = mobBox.expandTowards(horizontal.x, 0, horizontal.z);
+        int yExpanded = 0;
+        double yDifference = target.getY() - mob.getY();
 
-        // Si el target está más arriba, añadir también expansión hacia arriba 1 bloque
-        if (target.getY() > mob.getY() + mob.getBbHeight()) {
-            expanded = expanded.expandTowards(0, 1, 0);
-        }
+        if(yDifference > 0)
+            yExpanded=1;
+        else if(yDifference < 0)
+            yExpanded=-1;
+
+        AABB expanded = mobBox.expandTowards(horizontal.x, yExpanded, horizontal.z);
+
 
         BlockCollisions<BlockPos> col = new BlockCollisions<>(
                 level, mob, expanded, false,
                 (pos, shape) -> pos.immutable()
         );
-
         while (col.hasNext()) {
             BlockPos pos = col.next();
             if (!mobBox.intersects(AABB.unitCubeFromLowerCorner(Vec3.atLowerCornerOf(pos)))) {

@@ -1,4 +1,4 @@
-package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility;
+package es.pyronixstudio.natures_betrayal.common.mobs.ai;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
@@ -12,5 +12,5 @@ public interface IClassTypeDelegateInjector extends IClassTypeInjector {
         delegate().inject(mob, goalSelector, targetSelector, entityType, level);
     }
 
-    IHostibilityInjector delegate();
+    IHostilityInjector delegate();
 }

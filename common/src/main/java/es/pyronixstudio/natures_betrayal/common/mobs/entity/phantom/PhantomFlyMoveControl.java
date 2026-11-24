@@ -1,4 +1,4 @@
-package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs;
+package es.pyronixstudio.natures_betrayal.common.mobs.entity.phantom;
 
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Mob;
@@ -39,7 +39,7 @@ public class PhantomFlyMoveControl extends MoveControl {
     @Override
     public void tick() {
         if (this.operation != Operation.MOVE_TO) {
-            if (this.mob instanceof CustomPhatom phantom) {
+            if (this.mob instanceof CustomPhantom phantom) {
                 phantom.setBank(Mth.lerp(0.08F, phantom.getBank(), 0.0F));
             }
             // Sin waypoint no debe seguir derivando: eso era el "circulo" bajo
@@ -84,7 +84,7 @@ public class PhantomFlyMoveControl extends MoveControl {
         // Balanceo segun el giro real, para que el cuerpo acompañe el vuelo.
         float yawChange = Mth.wrapDegrees(newYaw - this.lastYaw);
         this.lastYaw = newYaw;
-        if (this.mob instanceof CustomPhatom phantom) {
+        if (this.mob instanceof CustomPhantom phantom) {
             float targetBank = Mth.clamp(yawChange * 0.45F, -MAX_BANK, MAX_BANK);
             phantom.setBank(Mth.lerp(0.15F, phantom.getBank(), targetBank));
         }

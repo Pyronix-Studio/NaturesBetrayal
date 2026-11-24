@@ -1,11 +1,11 @@
 package es.pyronixstudio.natures_betrayal.common.registries;
 
 import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
-import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs.CustomPhatom;
+import es.pyronixstudio.natures_betrayal.common.mobs.entity.phantom.CustomPhantom;
+import es.pyronixstudio.natures_betrayal.common.registries.DeferredRegistry.RegistryObject;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +14,9 @@ import java.util.function.Supplier;
 
 public class EntityAttributeRegistry {
 
-    private record AttributeEntry<T extends Mob>(RegistryEntry<EntityType.Builder<T>, EntityType<T>> entityType, Supplier<AttributeSupplier.Builder> attributes) {
+    private record AttributeEntry<T extends Mob>(
+            RegistryObject<EntityType.Builder<T>, EntityType<T>> entityType,
+            Supplier<AttributeSupplier.Builder> attributes) {
         void accept(BiConsumer<EntityType<? extends Mob>, AttributeSupplier.Builder> consumer) {
             consumer.accept(entityType.get(), attributes.get());
         }
@@ -24,10 +26,12 @@ public class EntityAttributeRegistry {
 
     public EntityAttributeRegistry() {
         register(NaturesBetrayal.registries.ENTITY_TYPES.CUSTOM_PHANTOM,
-                CustomPhatom::createAttributes);
+                CustomPhantom::createAttributes);
     }
 
-    public <T extends Mob> void register(RegistryEntry<EntityType.Builder<T>, EntityType<T>> entityType, Supplier<AttributeSupplier.Builder> attributes) {
+    public <T extends Mob> void register(
+            RegistryObject<EntityType.Builder<T>, EntityType<T>> entityType,
+            Supplier<AttributeSupplier.Builder> attributes) {
         entries.add(new AttributeEntry<>(entityType, attributes));
     }
 

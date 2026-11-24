@@ -1,6 +1,6 @@
 package es.pyronixstudio.natures_betrayal.common.mixins.mobs.injects;
 
-import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.HostibilityInjectorManager;
+import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.HostilityInjectorManager;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
@@ -25,7 +25,7 @@ public abstract class MobGoalMixin {
         if(level.isClientSide())
             return;
         Mob self = (Mob) (Object) this;
-        HostibilityInjectorManager.getManager().inject(self, goalSelector, targetSelector, entityType, level);
+        HostilityInjectorManager.getManager().inject(self, goalSelector, targetSelector, entityType, level);
 
     }
 

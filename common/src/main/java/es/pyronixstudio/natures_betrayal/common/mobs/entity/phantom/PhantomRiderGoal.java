@@ -1,4 +1,4 @@
-package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs;
+package es.pyronixstudio.natures_betrayal.common.mobs.entity.phantom;
 
 import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
 import net.minecraft.core.BlockPos;
@@ -6,7 +6,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 public class PhantomRiderGoal extends Goal {
@@ -15,7 +14,7 @@ public class PhantomRiderGoal extends Goal {
     private static final int COOLDOWN_TICKS = 120;
 
     private final Mob rider;
-    private CustomPhatom phantom;
+    private CustomPhantom phantom;
     private LivingEntity target;
     private boolean delivered;
     private boolean returning;
@@ -93,12 +92,12 @@ public class PhantomRiderGoal extends Goal {
             beginReturn(phantom);
             return;
         }
-        // Tambien se llama desde CustomPhatom.tick(); es idempotente.
+        // Tambien se llama desde CustomPhantom.tick(); es idempotente.
         checkDelivery(phantom);
     }
 
     /** Llamado desde el phantom cada tick, asi no dependemos de este goal. */
-    public void checkDelivery(CustomPhatom carrier) {
+    public void checkDelivery(CustomPhantom carrier) {
         if (delivered || carrier == null || !carrier.isAlive()) return;
         if (this.phantom != null && this.phantom != carrier) return;
 
@@ -133,7 +132,7 @@ public class PhantomRiderGoal extends Goal {
     }
 
     /** Objetivo perdido: el phantom vuela de vuelta al punto original con el jinete. */
-    private void beginReturn(CustomPhatom carrier) {
+    private void beginReturn(CustomPhantom carrier) {
         if (returning) return;
         returning = true;
         target = null;
@@ -142,13 +141,13 @@ public class PhantomRiderGoal extends Goal {
     }
 
     /** Target nuevo: se cancela el regreso, pero se conserva la posicion original. */
-    private void cancelReturn(CustomPhatom carrier) {
+    private void cancelReturn(CustomPhantom carrier) {
         returning = false;
         carrier.setReturnPos(null);
     }
 
     /** Suelta al pasajero y elimina el phantom. */
-    private void deliverAt(CustomPhatom carrier, BlockPos stand) {
+    private void deliverAt(CustomPhantom carrier, BlockPos stand) {
         float yRot = returning && origin != null ? originYRot : rider.getYRot();
         float xRot = returning && origin != null ? originXRot : rider.getXRot();
         rider.stopRiding();

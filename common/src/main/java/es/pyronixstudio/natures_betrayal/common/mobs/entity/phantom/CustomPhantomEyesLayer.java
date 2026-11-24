@@ -1,17 +1,17 @@
-package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs;
+package es.pyronixstudio.natures_betrayal.common.mobs.entity.phantom;
 
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.EyesLayer;
 import net.minecraft.resources.ResourceLocation;
 
-public class CustomPhatomEyesLayer<T extends CustomPhatom> extends EyesLayer<T, CustomPhatomModel<T>> {
+public class CustomPhantomEyesLayer<T extends CustomPhantom> extends EyesLayer<T, CustomPhantomModel<T>> {
 
     private static final RenderType PHANTOM_EYES = RenderType.eyes(
             ResourceLocation.withDefaultNamespace("textures/entity/phantom_eyes.png")
     );
 
-    public CustomPhatomEyesLayer(RenderLayerParent<T, CustomPhatomModel<T>> renderLayerParent) {
+    public CustomPhantomEyesLayer(RenderLayerParent<T, CustomPhantomModel<T>> renderLayerParent) {
         super(renderLayerParent);
     }
 

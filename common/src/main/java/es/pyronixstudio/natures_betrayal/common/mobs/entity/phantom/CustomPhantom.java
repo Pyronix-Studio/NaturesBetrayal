@@ -1,4 +1,4 @@
-package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs;
+package es.pyronixstudio.natures_betrayal.common.mobs.entity.phantom;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -11,8 +11,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.world.level.pathfinder.Path;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
@@ -21,7 +21,7 @@ import java.util.Set;
  * Phantom de transporte. Nunca se teletransporta: pide un path real al
  * FlyNodeEvaluator vanilla y suelta al jinete solo cuando ha llegado.
  */
-public class CustomPhatom extends FlyingMob {
+public class CustomPhantom extends FlyingMob {
 
     @Nullable
     private LivingEntity transportTarget;
@@ -36,7 +36,7 @@ public class CustomPhatom extends FlyingMob {
     @Nullable
     private DeliverPassengerGoal deliverGoal;
 
-    public CustomPhatom(EntityType<? extends FlyingMob> type, Level level) {
+    public CustomPhantom(EntityType<? extends FlyingMob> type, Level level) {
         super(type, level);
         this.moveControl = new PhantomFlyMoveControl(this);
         this.setNoGravity(true);

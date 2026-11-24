@@ -1,13 +1,16 @@
-package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs;
+package es.pyronixstudio.natures_betrayal.common.mobs.entity.phantom;
 
 import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.client.model.PhantomModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
-import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.client.model.geom.builders.CubeListBuilder;
+import net.minecraft.client.model.geom.builders.LayerDefinition;
+import net.minecraft.client.model.geom.builders.MeshDefinition;
+import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.util.Mth;
-import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.mobs.CustomPhatom;
 
-public class CustomPhatomModel<T extends CustomPhatom> extends HierarchicalModel<T> {
+public class CustomPhantomModel<T extends CustomPhantom> extends HierarchicalModel<T> {
 
     private static final String TAIL_BASE = "tail_base";
     private static final String TAIL_TIP  = "tail_tip";
@@ -20,8 +23,9 @@ public class CustomPhatomModel<T extends CustomPhatom> extends HierarchicalModel
     private final ModelPart tailBase;
     private final ModelPart tailTip;
 
-    public CustomPhatomModel(ModelPart modelPart) {
+    public CustomPhantomModel(ModelPart modelPart) {
         this.root = modelPart;
+
         ModelPart body      = modelPart.getChild("body");
         this.tailBase       = body.getChild("tail_base");
         this.tailTip        = this.tailBase.getChild("tail_tip");
@@ -80,9 +84,8 @@ public class CustomPhatomModel<T extends CustomPhatom> extends HierarchicalModel
     }
 
     @Override
-    public void setupAnim(T entity, float limbSwing, float limbSwingAmount,
-                          float ageInTicks, float netHeadYaw, float headPitch) {
-        // getUniqueFlapTickOffset() viene de FlyingMob — no existe, usamos ageInTicks directo
+    public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+
         float k = ageInTicks * 7.448451F * ((float) Math.PI / 180F);
         this.leftWingBase.zRot  =  Mth.cos(k) * 16.0F * ((float) Math.PI / 180F);
         this.leftWingTip.zRot   =  Mth.cos(k) * 16.0F * ((float) Math.PI / 180F);

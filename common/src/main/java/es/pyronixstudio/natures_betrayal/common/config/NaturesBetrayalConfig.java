@@ -1,6 +1,6 @@
 package es.pyronixstudio.natures_betrayal.common.config;
 
-import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostibility.EnumAttackMode;
+import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.EnumAttackMode;
 
 import java.nio.file.Path;
 
