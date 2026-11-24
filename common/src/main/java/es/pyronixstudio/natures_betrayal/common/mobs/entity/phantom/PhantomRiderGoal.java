@@ -6,6 +6,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -130,24 +131,38 @@ public class PhantomRiderGoal extends Goal {
             return;
         }
 
-        // Nunca soltar en el aire: el bloque actual debe tener suelo solido
-        // debajo y hueco suficiente para el phantom y el jinete.
-        boolean safeHere = carrier.getNavigation() instanceof PhantomFlightNavigation flight
-                && flight.isSafeSurface(carrier.blockPosition());
+        // La altura ya la controla DeliverPassengerGoal con ceilingBlocked:
+        // corregirla aqui peleaba con la navegacion (sube, baja, sube, baja...).
+        Mob passenger = carrier.getFirstPassenger() instanceof Mob m ? m : null;
+
+        // Nunca soltar en el aire: suelo solido debajo y el cuerpo del jinete
+        // sin intersectar bloques (isSafeSurface era demasiado rígido aquí).
+        boolean floorBelow = carrier.level().getBlockState(carrier.blockPosition().below()).isSolid();
+        boolean safeHere = passenger != null && floorBelow && riderFits(carrier, passenger);
         if (!safeHere) return;
 
-        // Entrega anticipada: si ya esta fisicamente encima del sitio, soltar
-        // aunque el pathfinder no haya marcado el bloque de aterrizaje exacto.
+        // Entrega por proximidad VA PRIMERO: aunque el goal siga en modo techo,
+        // si el phantom ya esta fisicamente en el destino hay que soltar.
         if (isCloseToDropPoint(carrier)) {
             deliverAt(carrier, carrier.blockPosition());
             return;
         }
+
+        // Con un techo de por medio no entregamos por el nodo del pathfinder:
+        // ese nodo esta debajo del techo, no en el destino.
+        if (carrier.isCeilingBlocked()) return;
 
         // Si no, usamos el ultimo nodo seguro que encontro el pathfinder.
         BlockPos landing = carrier.getLandingPos();
         if (landing != null) {
             deliverAt(carrier, landing);
         }
+    }
+
+    /** El cuerpo del jinete (con un pequeño margen) no toca ningún bloque. */
+    private boolean riderFits(CustomPhantom carrier, Mob rider) {
+        return carrier.level().getBlockStates(rider.getBoundingBox().deflate(0.01D))
+                .noneMatch(BlockState::isSolid);
     }
 
     /**

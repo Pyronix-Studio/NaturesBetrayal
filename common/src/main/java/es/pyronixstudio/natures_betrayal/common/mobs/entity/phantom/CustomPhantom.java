@@ -78,10 +78,24 @@ public class CustomPhantom extends FlyingMob {
         }
     }
 
+    /** True cuando el phantom paró bajo un techo en vez de subir al tejado. */
+    public boolean isCeilingBlocked() {
+        return deliverGoal != null && deliverGoal.ceilingBlocked;
+    }
+
     @Override
     public void tick() {
         super.tick();
-        if (!level().isClientSide && riderGoal != null) {
+        if (level().isClientSide) return;
+
+        // Huérfano: el goal se cortó o el jinete murió. Un phantom sin nadie
+        // encima no debe quedarse volando por el mundo.
+        if (riderGoal != null && getFirstPassenger() == null && this.tickCount > 5) {
+            riderGoal = null;
+            kill();
+            return;
+        }
+        if (riderGoal != null) {
             riderGoal.checkDelivery(this);
         }
     }
@@ -117,6 +131,11 @@ public class CustomPhantom extends FlyingMob {
         private BlockPos activeGoal;
         private int repathTimer;
         private boolean forceRepath;
+        /** Hay un techo entre el jinete y el objetivo: tope de vuelo, sin soltar. */
+        private boolean ceilingBlocked;
+        /** Bloque exacto del techo; cuando desaparezca reanudamos el ascenso. */
+        @Nullable
+        private BlockPos ceilingPos;
 
         @Override
         public boolean canUse() {
@@ -134,6 +153,8 @@ public class CustomPhantom extends FlyingMob {
             activeGoal = null;
             repathTimer = 0;
             forceRepath = false;
+            ceilingBlocked = false;
+            ceilingPos = null;
         }
 
         @Override
@@ -141,6 +162,26 @@ public class CustomPhantom extends FlyingMob {
             BlockPos requested = currentRequest();
             if (requested == null) {
                 stopFlying();
+                return;
+            }
+
+            // Regresando al punto de recogida: el tope de techo ya no aplica.
+            if (ceilingBlocked && returnPos != null) {
+                ceilingBlocked = false;
+                ceilingPos = null;
+                forceRepath = true;
+            }
+
+            // Tope de vuelo: seguimos montados, sin entregar, hasta que el
+            // mob rompa el techo. Entonces reanudamos la ruta hacia el objetivo.
+            if (ceilingBlocked) {
+                if (ceilingPos != null && !level().getBlockState(ceilingPos).isSolid()) {
+                    ceilingBlocked = false;
+                    ceilingPos = null;
+                    forceRepath = true;
+                }
+                // No llamar a stopFlying(): frenaba el phantom cada tick y
+                // borraba el path, dejandolo avanzar 1mm cada repath.
                 return;
             }
 
@@ -201,22 +242,41 @@ public class CustomPhantom extends FlyingMob {
                 return null;
             }
 
+            // Cubo cerrado: si hay un techo entre nosotros y el objetivo, no
+            // intentamos subir a el. Paramos justo debajo para que el mob pueda
+            // romperlo con el goal de romper, como si estuviera a 1 bloque.
+            int ceiling = flight.firstCeilingBelow(blockPosition(), requested.getY());
+            if (ceiling != -1) {
+                BlockPos under = flight.standUnderCeiling(blockPosition(), ceiling);
+                if (under != null) {
+                    Path stopPath = flight.pathTo(Set.of(under));
+                    if (endsNearOrAbove(stopPath, under)) {
+                        nav.moveTo(stopPath, 1.0);
+                        ceilingBlocked = true;
+                        ceilingPos = blockPosition().atY(ceiling);
+                        return under;
+                    }
+                }
+            }
+            ceilingBlocked = false;
+            ceilingPos = null;
+
             BlockPos goal = flight.findLandingTarget(requested);
             Path path = goal == null ? null : flight.pathTo(Set.of(goal));
             BlockPos chosen = goal;
 
-            if (!endsAtOrAbove(path, requested.getY())) {
+            if (!endsNearOrAbove(path, requested)) {
                 BlockPos high = flight.findHighestSafeSurface(requested);
                 if (high != null) {
                     Path fallback = flight.pathTo(Set.of(high));
-                    if (endsAtOrAbove(fallback, requested.getY())) {
+                    if (endsNearOrAbove(fallback, requested)) {
                         path = fallback;
                         chosen = high;
                     }
                 }
             }
 
-            if (endsAtOrAbove(path, requested.getY())) {
+            if (endsNearOrAbove(path, requested)) {
                 nav.moveTo(path, 1.0);
                 return chosen;
             }
@@ -231,6 +291,20 @@ public class CustomPhantom extends FlyingMob {
             }
             Node end = path.getEndNode();
             return end != null && end.y >= minY;
+        }
+
+        /**
+         * Igual pero sin exigir el bloque exacto ni que el pathfinder marque
+         * "reached": basta con que el último nodo quede cerca y a su altura.
+         * Esto evita repaths caros contra una coordenada concreta.
+         */
+        private boolean endsNearOrAbove(Path path, BlockPos requested) {
+            if (path == null) return false;
+            Node end = path.getEndNode();
+            if (end == null) return false;
+            double dx = end.x - requested.getX();
+            double dz = end.z - requested.getZ();
+            return end.y >= requested.getY() - 1 && dx * dx + dz * dz <= 16.0D;
         }
 
         private void stopFlying() {

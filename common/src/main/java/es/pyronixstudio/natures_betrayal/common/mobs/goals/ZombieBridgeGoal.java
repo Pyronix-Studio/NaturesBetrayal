@@ -2,12 +2,13 @@ package es.pyronixstudio.natures_betrayal.common.mobs.goals;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.EnumSet;
@@ -18,10 +19,18 @@ public class ZombieBridgeGoal extends Goal {
     private static final int MAX_HEIGHT_DIFF = 19;
     private static final double HORIZONTAL_RANGE = 16.0;
 
+    private static final double LEVEL_EPSILON = 0.1;
+
+    private static final double MIN_START_HEIGHT = 5.0;
+
+    private static final double MIN_RESUME_HEIGHT = 1.0;
+
     private enum Phase { VERTICAL, HORIZONTAL }
 
     private final Mob mob;
     private int cooldown = 0;
+
+    private LivingEntity interruptedTarget = null;
     private LivingEntity cachedTarget = null;
     private Phase phase = Phase.VERTICAL;
 
@@ -30,24 +39,35 @@ public class ZombieBridgeGoal extends Goal {
         this.setFlags(EnumSet.of(Flag.LOOK, Flag.MOVE));
     }
 
-    // ── Condiciones ───────────────────────────────────────────────────────────
 
     @Override
     public boolean canUse() {
+
+        if (GoalPaths.isMounted(mob))
+            return false;
         LivingEntity target = mob.getTarget();
         if (target == null) return false;
 
-        int vertDiff = target.blockPosition().getY() - mob.blockPosition().getY();
+
+        boolean resuming = interruptedTarget == target;
+
+        int levelDiff = target.blockPosition().getY() - mob.blockPosition().getY();
+        double yDiff = verticalDistanceTo(target);
         double horizDist = horizontalDistanceTo(target);
 
-        // Nunca si el target está más abajo
-        if (vertDiff < 0) return false;
+        if (yDiff < -LEVEL_EPSILON) return false;
         if (horizDist > HORIZONTAL_RANGE) return false;
-        PathNavigation navigation = mob.getNavigation();
-        if (navigation.isInProgress() || !navigation.isDone()) return false;
 
-        boolean needsVertical   = vertDiff >= 1 && vertDiff <= MAX_HEIGHT_DIFF;
-        boolean needsHorizontal = vertDiff <= 1 && horizDist > 2.5;
+
+        if (GoalPaths.canReachTarget(mob, target))
+            return false;
+
+
+        double requiredHeight = resuming ? MIN_RESUME_HEIGHT : MIN_START_HEIGHT;
+        boolean needsVertical   = yDiff >= requiredHeight
+                && levelDiff <= MAX_HEIGHT_DIFF;
+
+        boolean needsHorizontal = yDiff <= LEVEL_EPSILON && horizDist > 2.5 && isGapTowards(target);
 
         if (!needsVertical && !needsHorizontal) return false;
 
@@ -58,36 +78,41 @@ public class ZombieBridgeGoal extends Goal {
 
     @Override
     public boolean canContinueToUse() {
+        if (GoalPaths.isMounted(mob)) return false;
         if (cachedTarget == null || !cachedTarget.isAlive()) return false;
         if (horizontalDistanceTo(cachedTarget) > HORIZONTAL_RANGE) return false;
 
-        int vertDiff = cachedTarget.blockPosition().getY() - mob.blockPosition().getY();
+        double yDiff = verticalDistanceTo(cachedTarget);
 
-        // Si el target baja durante la construcción, para
-        if (vertDiff < 0) return false;
+        if (yDiff < -LEVEL_EPSILON) return false;
 
         return switch (phase) {
-            case VERTICAL   -> vertDiff > 0;
-            case HORIZONTAL -> horizontalDistanceTo(cachedTarget) > 1.5;
+            case VERTICAL   -> yDiff > LEVEL_EPSILON;
+            case HORIZONTAL -> horizontalDistanceTo(cachedTarget) > 1.5 && isGapTowards(cachedTarget);
         };
     }
 
     @Override
     public void start() {
+        mob.getNavigation().stop();
         cooldown = 0;
+        interruptedTarget = null;
     }
 
     @Override
     public void stop() {
-        // Devuelve el control al pathfinder apuntando al objetivo
         if (cachedTarget != null) {
             mob.getNavigation().moveTo(cachedTarget, 1.0);
+        }
+
+        if (phase == Phase.VERTICAL && cachedTarget != null
+                && verticalDistanceTo(cachedTarget) > LEVEL_EPSILON) {
+            interruptedTarget = cachedTarget;
         }
         cachedTarget = null;
         cooldown = 0;
     }
 
-    // ── Lógica principal ──────────────────────────────────────────────────────
 
     @Override
     public void tick() {
@@ -95,20 +120,19 @@ public class ZombieBridgeGoal extends Goal {
 
         mob.getLookControl().setLookAt(cachedTarget, 30f, 30f);
 
-        int vertDiff = cachedTarget.blockPosition().getY() - mob.blockPosition().getY();
+        double yDiff = verticalDistanceTo(cachedTarget);
 
-        // Si el target baja, para
-        if (vertDiff < 0) return;
+        if (yDiff < -LEVEL_EPSILON) return;
 
-        // Transición vertical → horizontal cuando ya está al mismo nivel
-        if (phase == Phase.VERTICAL && vertDiff <= 0) {
+        if (phase == Phase.VERTICAL && yDiff <= LEVEL_EPSILON) {
             phase = Phase.HORIZONTAL;
             cooldown = 0;
+            interruptedTarget = null;
         }
 
         if (cooldown > 0) {
             cooldown--;
-            if (phase == Phase.VERTICAL) mob.getNavigation().stop();
+            mob.getNavigation().stop();
             return;
         }
 
@@ -118,7 +142,6 @@ public class ZombieBridgeGoal extends Goal {
         }
     }
 
-    // ── Fase vertical ─────────────────────────────────────────────────────────
 
     private void tickVertical() {
         mob.getNavigation().stop();
@@ -131,21 +154,26 @@ public class ZombieBridgeGoal extends Goal {
         if (!isSolid(ground)) return;
         if (isSolid(above) || isSolid(head)) return;
 
+        double centerX = feet.getX() + 0.5;
+        double centerZ = feet.getZ() + 0.5;
+        if (Math.abs(mob.getX() - centerX) > 0.001 || Math.abs(mob.getZ() - centerZ) > 0.001) {
+            mob.setPos(centerX, mob.getY(), centerZ);
+            mob.setDeltaMovement(0.0, mob.getDeltaMovement().y(), 0.0);
+        }
+
         if (canPlace(feet)) {
             placeBlock(feet);
-            mob.jumpFromGround();
             mob.swing(InteractionHand.MAIN_HAND);
-            cooldown = PLACE_COOLDOWN;
         }
-    }
 
-    // ── Fase horizontal ───────────────────────────────────────────────────────
+        mob.jumpFromGround();
+        cooldown = PLACE_COOLDOWN;
+    }
 
     private void tickHorizontal() {
         BlockPos feet  = mob.blockPosition();
         BlockPos below = feet.below();
 
-        // Abismo bajo los pies → pone soporte primero
         if (isAirOrVoid(below)) {
             if (canPlace(below)) {
                 placeBlock(below);
@@ -155,7 +183,6 @@ public class ZombieBridgeGoal extends Goal {
             return;
         }
 
-        // Pone bloque en el suelo del próximo paso si no hay suelo
         Direction facing   = getFacingToTarget();
         BlockPos nextFloor = below.relative(facing);
         BlockPos nextFeet  = feet.relative(facing);
@@ -171,7 +198,6 @@ public class ZombieBridgeGoal extends Goal {
             }
         }
 
-        // Mueve hacia el objetivo manteniendo la Y actual
         mob.getMoveControl().setWantedPosition(
                 cachedTarget.getX(),
                 mob.getY(),
@@ -180,16 +206,14 @@ public class ZombieBridgeGoal extends Goal {
         );
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private Direction getFacingToTarget() {
-        double dx = cachedTarget.getX() - mob.getX();
-        double dz = cachedTarget.getZ() - mob.getZ();
-        if (Math.abs(dx) >= Math.abs(dz)) {
-            return dx > 0 ? Direction.EAST : Direction.WEST;
-        } else {
-            return dz > 0 ? Direction.SOUTH : Direction.NORTH;
-        }
+        return GoalDirections.primary(mob, cachedTarget);
+    }
+
+    private boolean isGapTowards(LivingEntity target) {
+        Direction facing = GoalDirections.primary(mob, target);
+        return isAirOrVoid(mob.blockPosition().below().relative(facing));
     }
 
     private boolean isSolid(BlockPos pos) {
@@ -208,11 +232,21 @@ public class ZombieBridgeGoal extends Goal {
 
     private void placeBlock(BlockPos pos) {
         mob.level().setBlockAndUpdate(pos, Blocks.DIRT.defaultBlockState());
+
+        mob.level().playSound(
+                null, pos,
+                SoundType.GRAVEL.getPlaceSound(),
+                SoundSource.BLOCKS, 1.0F, 1.0F
+        );
     }
 
     private double horizontalDistanceTo(LivingEntity entity) {
         double dx = entity.getX() - mob.getX();
         double dz = entity.getZ() - mob.getZ();
         return Math.sqrt(dx * dx + dz * dz);
+    }
+
+    private double verticalDistanceTo(LivingEntity entity) {
+        return entity.getY() - mob.getY();
     }
 }

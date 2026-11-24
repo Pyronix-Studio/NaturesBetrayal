@@ -23,8 +23,10 @@ public class PhantomFlightNavigation extends PathNavigation {
 
     private static final int MAX_VISITED = 4096;
     private static final float SEARCH_RANGE = 160.0F;
-    private static final int MAX_SCAN = 64;
-    private static final int RIDER_HEAD_CLEARANCE = 2;
+    /** El phantom no buscaba "el primero" sino hasta el techo del mundo. */
+    private static final int MAX_LANDING_RISE = 6;
+    /** 2 para el cuerpo del jinete + 1 por la fracción de Y del phantom. */
+    private static final int RIDER_HEAD_CLEARANCE = 3;
 
     public PhantomFlightNavigation(Mob mob, Level level) {
         super(mob, level);
@@ -100,17 +102,55 @@ public class PhantomFlightNavigation extends PathNavigation {
      */
     @Nullable
     public BlockPos findLandingTarget(BlockPos from) {
-        int top = Math.min(from.getY() + MAX_SCAN, this.level.getMaxBuildHeight() - 2);
+        int top = Math.min(from.getY() + MAX_LANDING_RISE, this.level.getMaxBuildHeight() - 2);
         for (int y = from.getY(); y <= top; y++) {
-            int radius = y == from.getY() ? 0 : 3;
-            for (int dx = -radius; dx <= radius; dx++) {
-                for (int dz = -radius; dz <= radius; dz++) {
-                    if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) continue;
-                    BlockPos pos = new BlockPos(from.getX() + dx, y, from.getZ() + dz);
-                    if (isSafeSurface(pos)) {
-                        return pos;
+            // En el nivel del jugador también miramos las columnas de al lado:
+            // si tiene techo, antes de subir al tejado probamos a dejar al
+            // jinete junto a él, dentro de la cueva.
+            int radius = Math.min(3, 1 + y - from.getY());
+            // Anillos desde el centro: primero lo más cerca del objetivo.
+            for (int r = 0; r <= radius; r++) {
+                for (int dx = -r; dx <= r; dx++) {
+                    for (int dz = -r; dz <= r; dz++) {
+                        if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                        BlockPos pos = new BlockPos(from.getX() + dx, y, from.getZ() + dz);
+                        if (isSafeSurface(pos)) {
+                            return pos;
+                        }
                     }
                 }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Cubo cerrado: primer bloque solido en la columna de {@code from} antes
+     * de llegar a la altura de {@code to}. Si no hay techo, devuelve -1.
+     */
+    public int firstCeilingBelow(BlockPos from, int toY) {
+        int top = Math.min(toY, this.level.getMaxBuildHeight() - 1);
+        for (int y = from.getY() + 1; y <= top; y++) {
+            if (this.level.getBlockState(from.atY(y)).isSolid()) {
+                return y;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * Donde parar bajo un techo: el mob queda con los pies en {@code ceiling-2},
+     * asi tiene un bloque de hueco sobre la cabeza y puede romper el techo.
+     * Si esa posicion es solida, bajamos hasta encontrar hueco.
+     */
+    @Nullable
+    public BlockPos standUnderCeiling(BlockPos column, int ceilingY) {
+        BlockPos stand = column.atY(ceilingY - 2);
+        for (int y = stand.getY(); y >= column.getY() - 6; y--) {
+            BlockPos p = stand.atY(y);
+            if (!this.level.getBlockState(p).isSolid()
+                    && !this.level.getBlockState(p.above()).isSolid()) {
+                return p;
             }
         }
         return null;
@@ -119,13 +159,17 @@ public class PhantomFlightNavigation extends PathNavigation {
     /** Superficie segura mas alta, usada solo si el objetivo normal no es alcanzable. */
     @Nullable
     public BlockPos findHighestSafeSurface(BlockPos from) {
-        int top = Math.min(from.getY() + MAX_SCAN, this.level.getMaxBuildHeight() - 2);
+        // Antes empezaba en getMaxBuildHeight(): por eso se subía al máximo.
+        int top = Math.min(from.getY() + MAX_LANDING_RISE, this.level.getMaxBuildHeight() - 2);
         for (int y = top; y >= from.getY(); y--) {
-            for (int dx = -3; dx <= 3; dx++) {
-                for (int dz = -3; dz <= 3; dz++) {
-                    BlockPos pos = new BlockPos(from.getX() + dx, y, from.getZ() + dz);
-                    if (isSafeSurface(pos)) {
-                        return pos;
+            for (int r = 0; r <= 3; r++) {
+                for (int dx = -r; dx <= r; dx++) {
+                    for (int dz = -r; dz <= r; dz++) {
+                        if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                        BlockPos pos = new BlockPos(from.getX() + dx, y, from.getZ() + dz);
+                        if (isSafeSurface(pos)) {
+                            return pos;
+                        }
                     }
                 }
             }
@@ -145,7 +189,8 @@ public class PhantomFlightNavigation extends PathNavigation {
         double dx = here.getX() - target.getX();
         double dz = here.getZ() - target.getZ();
         double dy = here.getY() - target.getY();
-        return dx * dx + dz * dz <= 4.0D && Math.abs(dy) <= 1;
+        // Antes exigía el bloque casi exacto; eso obligaba a repath todo el rato.
+        return dx * dx + dz * dz <= 16.0D && Math.abs(dy) <= 2;
     }
 
     /** Suelo solido debajo + hueco para el phantom y el jinete. */
