@@ -1,5 +1,6 @@
 package es.pyronixstudio.natures_betrayal.common.mobs.entity.phantom;
 
+import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -11,16 +12,15 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
 
-/**
- * Phantom de transporte. Nunca se teletransporta: pide un path real al
- * FlyNodeEvaluator vanilla y suelta al jinete solo cuando ha llegado.
- */
 public class CustomPhantom extends FlyingMob {
 
     @Nullable
@@ -29,6 +29,9 @@ public class CustomPhantom extends FlyingMob {
     private BlockPos landingPos;
     @Nullable
     private BlockPos returnPos;
+
+    @Nullable
+    private BlockPos pickupPos;
     private float bank;
 
     @Nullable
@@ -44,7 +47,13 @@ public class CustomPhantom extends FlyingMob {
     }
 
     public void setTransportTarget(@Nullable LivingEntity target) {
-        this.transportTarget = target;
+        if (this.transportTarget != target) {
+            this.transportTarget = target;
+            this.landingPos = null;
+            if (deliverGoal != null) {
+                deliverGoal.forceRepath = true;
+            }
+        }
     }
 
     @Nullable
@@ -69,7 +78,6 @@ public class CustomPhantom extends FlyingMob {
         this.riderGoal = goal;
     }
 
-    /** Orden de regreso: vuela hasta este punto y entrega alli. */
     public void setReturnPos(@Nullable BlockPos pos) {
         this.returnPos = pos;
         this.landingPos = null;
@@ -78,7 +86,23 @@ public class CustomPhantom extends FlyingMob {
         }
     }
 
-    /** True cuando el phantom paró bajo un techo en vez de subir al tejado. */
+    public void clearLanding() {
+        this.landingPos = null;
+        if (deliverGoal != null) {
+            deliverGoal.forceRepath = true;
+        }
+    }
+
+    public void setPickupPos(@Nullable BlockPos pos) {
+        this.pickupPos = pos;
+    }
+
+    @Nullable
+    public BlockPos getPickupPos() {
+        return this.pickupPos;
+    }
+
+
     public boolean isCeilingBlocked() {
         return deliverGoal != null && deliverGoal.ceilingBlocked;
     }
@@ -88,8 +112,6 @@ public class CustomPhantom extends FlyingMob {
         super.tick();
         if (level().isClientSide) return;
 
-        // Huérfano: el goal se cortó o el jinete murió. Un phantom sin nadie
-        // encima no debe quedarse volando por el mundo.
         if (riderGoal != null && getFirstPassenger() == null && this.tickCount > 5) {
             riderGoal = null;
             kill();
@@ -97,7 +119,88 @@ public class CustomPhantom extends FlyingMob {
         }
         if (riderGoal != null) {
             riderGoal.checkDelivery(this);
+            return;
         }
+
+        if (this.tickCount > 5) {
+            recoverUnloadedPassenger();
+            if (!isAlive()) return;
+            if (getFirstPassenger() == null) {
+                discard();
+            }
+        }
+    }
+
+
+
+    private void recoverUnloadedPassenger() {
+        if (returnPos != null) return;
+        if (transportTarget != null && transportTarget.isAlive()) return;
+
+        Entity passenger = getFirstPassenger();
+        if (!(passenger instanceof Mob mob)) return;
+        if (mob.getTarget() != null && mob.getTarget().isAlive()) return;
+
+        BlockPos saved = this.pickupPos;
+        if (saved != null) {
+            BlockPos nearOrigin = findSafeAround(mob, saved, 2);
+            if (nearOrigin != null) {
+                dropAt(mob, nearOrigin);
+                return;
+            }
+        }
+
+        BlockPos from = blockPosition();
+        BlockPos nearHere = findSafeAround(mob, from, 2);
+        if (nearHere != null) {
+            dropAt(mob, nearHere);
+            return;
+        }
+
+        for (int y = from.getY(); y >= level().dimensionType().minY(); y--) {
+            BlockPos solid = new BlockPos(from.getX(), y, from.getZ());
+            if (!level().getBlockState(solid).isSolid()) continue;
+
+            BlockPos stand = solid.above();
+            if (isSafeStand(mob, stand)) {
+                dropAt(mob, stand);
+                return;
+            }
+        }
+    }
+
+    @Nullable
+    private BlockPos findSafeAround(Mob mob, BlockPos center, int radius) {
+        // Igual que en la entrega: nunca recolocar al jinete por encima del techo.
+        int[] ys = {0, -1, -2, -3};
+        for (int r = 0; r <= radius; r++) {
+            for (int dx = -r; dx <= r; dx++) {
+                for (int dz = -r; dz <= r; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != r) continue;
+                    for (int dy : ys) {
+                        BlockPos stand = center.offset(dx, dy, dz);
+                        if (isSafeStand(mob, stand)) return stand;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean isSafeStand(Mob mob, BlockPos stand) {
+        if (!level().getBlockState(stand.below()).isSolid()) return false;
+        AABB box = mob.getBoundingBox().move(Vec3.atCenterOf(stand).subtract(mob.position()));
+        return level().getBlockStates(box.deflate(0.01D)).noneMatch(BlockState::isSolid);
+    }
+
+    private void dropAt(Mob mob, BlockPos stand) {
+        mob.stopRiding();
+        mob.moveTo(stand.getX() + 0.5D, stand.getY(), stand.getZ() + 0.5D,
+                mob.getYRot(), mob.getXRot());
+        mob.getNavigation().stop();
+        mob.fallDistance = 0.0F;
+        this.pickupPos = null;
+        discard();
     }
 
     @Override
@@ -119,7 +222,6 @@ public class CustomPhantom extends FlyingMob {
         this.goalSelector.addGoal(1, this.deliverGoal);
     }
 
-    // -------------------------------------------------------
 
     class DeliverPassengerGoal extends Goal {
 
@@ -131,9 +233,9 @@ public class CustomPhantom extends FlyingMob {
         private BlockPos activeGoal;
         private int repathTimer;
         private boolean forceRepath;
-        /** Hay un techo entre el jinete y el objetivo: tope de vuelo, sin soltar. */
+
         private boolean ceilingBlocked;
-        /** Bloque exacto del techo; cuando desaparezca reanudamos el ascenso. */
+
         @Nullable
         private BlockPos ceilingPos;
 
@@ -164,24 +266,18 @@ public class CustomPhantom extends FlyingMob {
                 stopFlying();
                 return;
             }
-
-            // Regresando al punto de recogida: el tope de techo ya no aplica.
             if (ceilingBlocked && returnPos != null) {
                 ceilingBlocked = false;
                 ceilingPos = null;
                 forceRepath = true;
             }
 
-            // Tope de vuelo: seguimos montados, sin entregar, hasta que el
-            // mob rompa el techo. Entonces reanudamos la ruta hacia el objetivo.
             if (ceilingBlocked) {
                 if (ceilingPos != null && !level().getBlockState(ceilingPos).isSolid()) {
                     ceilingBlocked = false;
                     ceilingPos = null;
                     forceRepath = true;
                 }
-                // No llamar a stopFlying(): frenaba el phantom cada tick y
-                // borraba el path, dejandolo avanzar 1mm cada repath.
                 return;
             }
 
@@ -195,8 +291,7 @@ public class CustomPhantom extends FlyingMob {
 
             Path path = nav.getPath();
             if (activeGoal != null && path != null && path.isDone()) {
-                // No hace falta clavarse en el nodo exacto: vale cualquier
-                // bloque seguro a 1-2 bloques del objetivo.
+
                 if (nav instanceof PhantomFlightNavigation flight
                         && flight.isNearSafeSurface(activeGoal, blockPosition())) {
                     landingPos = blockPosition();
@@ -207,7 +302,7 @@ public class CustomPhantom extends FlyingMob {
                     forceRepath = true;
                 }
             } else if (path == null && activeGoal != null) {
-                // El path desaparecio (timeout/stuck): lo rehacemos ya mismo.
+
                 forceRepath = true;
             } else if (activeGoal == null) {
                 if (--repathTimer <= 0) {
@@ -229,7 +324,6 @@ public class CustomPhantom extends FlyingMob {
             return current.getOnPos().above();
         }
 
-        /** Objetivo exacto alcanzable, o null. Nunca un camino truncado. */
         @Nullable
         private BlockPos plan(PathNavigation nav, BlockPos requested) {
             if (!(nav instanceof PhantomFlightNavigation flight)) {
@@ -242,9 +336,6 @@ public class CustomPhantom extends FlyingMob {
                 return null;
             }
 
-            // Cubo cerrado: si hay un techo entre nosotros y el objetivo, no
-            // intentamos subir a el. Paramos justo debajo para que el mob pueda
-            // romperlo con el goal de romper, como si estuviera a 1 bloque.
             int ceiling = flight.firstCeilingBelow(blockPosition(), requested.getY());
             if (ceiling != -1) {
                 BlockPos under = flight.standUnderCeiling(blockPosition(), ceiling);
@@ -284,7 +375,7 @@ public class CustomPhantom extends FlyingMob {
             return null;
         }
 
-        /** Nunca aceptamos un camino que termine por debajo del jugador. */
+
         private boolean endsAtOrAbove(Path path, int minY) {
             if (path == null || !path.canReach()) {
                 return false;
@@ -293,11 +384,7 @@ public class CustomPhantom extends FlyingMob {
             return end != null && end.y >= minY;
         }
 
-        /**
-         * Igual pero sin exigir el bloque exacto ni que el pathfinder marque
-         * "reached": basta con que el último nodo quede cerca y a su altura.
-         * Esto evita repaths caros contra una coordenada concreta.
-         */
+
         private boolean endsNearOrAbove(Path path, BlockPos requested) {
             if (path == null) return false;
             Node end = path.getEndNode();

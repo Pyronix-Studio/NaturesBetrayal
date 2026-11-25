@@ -2,6 +2,7 @@ package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility;
 
 import es.pyronixstudio.natures_betrayal.common.mobs.ai.IClassTypeInjector;
 import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.animals.AttackModeInjector;
+import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.monsters.CreeperInjector;
 import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.monsters.TargetRadiusInjector;
 import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.monsters.ZombieInjector;
 import net.minecraft.world.entity.EntityType;
@@ -39,6 +40,7 @@ public class HostilityInjectorManager {
     private void registersSpecificInjectors() {
         registerInjector(TargetRadiusInjector::new);
         registerInjector(ZombieInjector::new);
+        registerInjector(CreeperInjector::new);
         registerInjector(AttackModeInjector::new);
     }
 

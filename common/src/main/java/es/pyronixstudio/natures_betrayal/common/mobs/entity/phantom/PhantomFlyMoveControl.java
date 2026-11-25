@@ -6,14 +6,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.control.MoveControl;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * MoveControl del phantom: mueve por velocidad y orienta el cuerpo hacia donde
- * vuela de verdad (yaw + pitch suaves y un balanceo al girar).
- *
- * No usa FlyingMoveControl directamente porque sus saltos de XRot entre
- * waypoints 3D hacian que el modelo diera vueltas. Aqui todo va limitado por
- * tick y derivado del vector de vuelo.
- */
 public class PhantomFlyMoveControl extends MoveControl {
 
     private static final float MAX_YAW_STEP = 14.0F;
@@ -31,7 +23,7 @@ public class PhantomFlyMoveControl extends MoveControl {
         this.lastYaw = mob.getYRot();
     }
 
-    /** Corta cualquier waypoint pendiente y deja que el tick frene al phantom. */
+
     public void stop() {
         this.operation = Operation.WAIT;
     }
@@ -39,13 +31,9 @@ public class PhantomFlyMoveControl extends MoveControl {
     @Override
     public void tick() {
         if (this.operation != Operation.MOVE_TO) {
-            if (this.mob instanceof CustomPhantom phantom) {
-                phantom.setBank(Mth.lerp(0.08F, phantom.getBank(), 0.0F));
-            }
-            // Sin waypoint no debe seguir derivando: eso era el "circulo" bajo
-            // el suelo. Frenamos suavemente hasta parar.
+
             this.mob.setDeltaMovement(this.mob.getDeltaMovement().scale(0.5D));
-            this.mob.setXRot(rotateTowards(this.mob.getXRot(), 0.0F, MAX_PITCH_STEP * 0.5F));
+            faceMovement(MAX_YAW_STEP * 0.6F, MAX_PITCH_STEP * 0.6F);
             return;
         }
         this.operation = Operation.WAIT;
@@ -69,19 +57,32 @@ public class PhantomFlyMoveControl extends MoveControl {
         }
         this.mob.setDeltaMovement(velocity);
 
-        // Mismo convenio que FlyingMoveControl de vanilla: yaw = atan2(dx, dz).
-        float targetYaw = (float) (Mth.atan2(dx, dz) * (180.0 / Math.PI));
-        float newYaw = rotateTowards(this.mob.getYRot(), targetYaw, MAX_YAW_STEP);
+        faceMovement(MAX_YAW_STEP, MAX_PITCH_STEP);
+    }
+
+    private void faceMovement(float yawStep, float pitchStep) {
+        Vec3 velocity = this.mob.getDeltaMovement();
+        double horizontal = Math.sqrt(velocity.x * velocity.x + velocity.z * velocity.z);
+        if (velocity.lengthSqr() < 1.0E-4) {
+            this.mob.setXRot(rotateTowards(this.mob.getXRot(), 0.0F, pitchStep * 0.5F));
+            updateBank(this.mob.getYRot());
+            return;
+        }
+
+
+        float targetYaw = (float) (Mth.atan2(velocity.z, velocity.x) * (180.0 / Math.PI)) - 90.0F;
+        float newYaw = rotateTowards(this.mob.getYRot(), targetYaw, yawStep);
         this.mob.setYRot(newYaw);
         this.mob.yBodyRot = newYaw;
 
-        // Negativo = morro arriba, igual que el phantom vanilla.
-        double horizontal = Math.sqrt(dx * dx + dz * dz);
-        float targetPitch = -(float) (Mth.atan2(dy, horizontal) * (180.0 / Math.PI));
+        float targetPitch = -(float) (Mth.atan2(velocity.y, horizontal) * (180.0 / Math.PI));
         targetPitch = Mth.clamp(targetPitch, -MAX_PITCH, MAX_PITCH);
-        this.mob.setXRot(rotateTowards(this.mob.getXRot(), targetPitch, MAX_PITCH_STEP));
+        this.mob.setXRot(rotateTowards(this.mob.getXRot(), targetPitch, pitchStep));
 
-        // Balanceo segun el giro real, para que el cuerpo acompañe el vuelo.
+        updateBank(newYaw);
+    }
+
+    private void updateBank(float newYaw) {
         float yawChange = Mth.wrapDegrees(newYaw - this.lastYaw);
         this.lastYaw = newYaw;
         if (this.mob instanceof CustomPhantom phantom) {

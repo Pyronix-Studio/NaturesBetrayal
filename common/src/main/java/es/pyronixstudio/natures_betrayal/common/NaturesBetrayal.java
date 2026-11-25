@@ -3,6 +3,7 @@ package es.pyronixstudio.natures_betrayal.common;
 import com.mojang.logging.LogUtils;
 import es.pyronixstudio.natures_betrayal.common.config.NaturesBetrayalConfig;
 import es.pyronixstudio.natures_betrayal.common.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -40,6 +41,10 @@ public class NaturesBetrayal {
             modConfigFolderFile.mkdir();
 
         return modConfigFolder.resolve(NaturesBetrayal.MOD_ID+".toml");
+    }
+
+    public static ResourceLocation resource(String path){
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 
 }

@@ -131,8 +131,6 @@ public class MobBreakGoal extends Goal {
             if (!result.isEmpty()) return result;
         }
 
-        // El buscador apunta al target: arriba, abajo o la pared del eje
-        // dominante. Montado o no es igual; solo cambia la caja de busqueda.
         for (BlockPos origin : new BlockPos[] {
                 mob.blockPosition(),
                 mob.getVehicle() != null ? mob.getVehicle().blockPosition() : mob.blockPosition()
@@ -211,7 +209,6 @@ public class MobBreakGoal extends Goal {
         BlockState state = level.getBlockState(targetBlock);
         float speed = getBreakSpeed(state, targetBlock);
         if (state.isAir() || speed >= Float.MAX_VALUE || speed <= 0f) {
-            // Cambió el bloque mientras rompíamos o es irrompible: se salta.
             level.destroyBlockProgress(mob.getId(), targetBlock, -1);
             targetBlock = null;
             return;

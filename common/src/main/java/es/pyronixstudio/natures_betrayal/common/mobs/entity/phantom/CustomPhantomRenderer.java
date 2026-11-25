@@ -2,6 +2,7 @@ package es.pyronixstudio.natures_betrayal.common.mobs.entity.phantom;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
 import net.minecraft.client.model.geom.ModelLayers;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.MobRenderer;
@@ -10,7 +11,7 @@ import net.minecraft.resources.ResourceLocation;
 public class CustomPhantomRenderer extends MobRenderer<CustomPhantom, CustomPhantomModel<CustomPhantom>> {
 
     private static final ResourceLocation PHANTOM_LOCATION =
-            ResourceLocation.withDefaultNamespace("textures/entity/phantom.png");
+            NaturesBetrayal.resource("textures/entity/custom_phantom/phantom.png");
 
     public CustomPhantomRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new CustomPhantomModel<>(ctx.bakeLayer(ModelLayers.PHANTOM)), 0.75F);

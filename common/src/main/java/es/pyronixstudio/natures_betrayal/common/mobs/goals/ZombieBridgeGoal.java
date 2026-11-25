@@ -175,7 +175,9 @@ public class ZombieBridgeGoal extends Goal {
         BlockPos below = feet.below();
 
         if (isAirOrVoid(below)) {
-            if (canPlace(below)) {
+            // Si debajo del hueco ya hay suelo, el mob puede bajar caminando:
+            // no hace falta poner soporte (evita construir a la mínima).
+            if (!isSolid(below.below()) && canPlace(below)) {
                 placeBlock(below);
                 mob.swing(InteractionHand.MAIN_HAND);
                 cooldown = PLACE_COOLDOWN;
@@ -213,7 +215,10 @@ public class ZombieBridgeGoal extends Goal {
 
     private boolean isGapTowards(LivingEntity target) {
         Direction facing = GoalDirections.primary(mob, target);
-        return isAirOrVoid(mob.blockPosition().below().relative(facing));
+        BlockPos nextFloor = mob.blockPosition().below().relative(facing);
+        // Solo es hueco si no hay suelo un nivel más abajo: con suelo el mob
+        // baja y el pathfinder llega sin construir.
+        return isAirOrVoid(nextFloor) && !isSolid(nextFloor.below());
     }
 
     private boolean isSolid(BlockPos pos) {

@@ -7,6 +7,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,12 +15,9 @@ public class PhantomRiderGoal extends Goal {
 
     private static final double TRIGGER_Y_DIFF = 20.0;
     private static final int COOLDOWN_TICKS = 120;
-    /** Distancia horizontal al objetivo para soltar sin esperar al bloque exacto. */
-    private static final double TARGET_DROP_RADIUS = 0.5D;
-    /** Tolerancia al volver a un bloque concreto (el punto de recogida). */
-    private static final double BLOCK_DROP_RADIUS = 1.0D;
-    /** Margen vertical: el phantom vuela algo por encima del objetivo. */
-    private static final double DROP_Y_TOLERANCE = 1.0D;
+
+    private static final double ARRIVAL_HORIZONTAL_SQ = 25.0;
+    private static final double ARRIVAL_VERTICAL = 3.0;
 
     private final Mob rider;
     private CustomPhantom phantom;
@@ -28,7 +26,9 @@ public class PhantomRiderGoal extends Goal {
     private boolean returning;
     private long nextUseTick;
 
-    /** Donde estaba el mob antes de montarse, para devolverlo si se pierde el objetivo. */
+    @Nullable
+    private BlockPos committedDrop;
+
     @Nullable
     private BlockPos origin;
     private float originYRot;
@@ -59,6 +59,7 @@ public class PhantomRiderGoal extends Goal {
     public void start() {
         delivered = false;
         returning = false;
+        committedDrop = null;
         target = rider.getTarget();
         if (target == null || !(rider.level() instanceof ServerLevel serverLevel)) {
             delivered = true;
@@ -76,13 +77,19 @@ public class PhantomRiderGoal extends Goal {
             return;
         }
 
+        phantom.setPickupPos(origin);
         phantom.setTransportTarget(target);
-        phantom.setRiderGoal(this);
         phantom.moveTo(rider.getX(), rider.getY() + 0.5, rider.getZ(), rider.getYRot(), 0.0F);
         serverLevel.addFreshEntity(phantom);
 
         rider.getNavigation().stop();
-        rider.startRiding(phantom, true);
+        if (!rider.startRiding(phantom, true)) {
+            phantom.discard();
+            phantom = null;
+            delivered = true;
+            return;
+        }
+        phantom.setRiderGoal(this);
     }
 
     @Override
@@ -93,23 +100,23 @@ public class PhantomRiderGoal extends Goal {
             if (returning) {
                 cancelReturn(phantom);
             }
+            if (target != sensed) {
+                committedDrop = null;
+            }
             target = sensed;
             phantom.setTransportTarget(sensed);
         } else if (!returning) {
-            // El pasajero perdio su objetivo: volvemos al punto de recogida.
             beginReturn(phantom);
             return;
         }
-        // Tambien se llama desde CustomPhantom.tick(); es idempotente.
+
         checkDelivery(phantom);
     }
 
-    /** Llamado desde el phantom cada tick, asi no dependemos de este goal. */
     public void checkDelivery(CustomPhantom carrier) {
         if (delivered || carrier == null || !carrier.isAlive()) return;
         if (this.phantom != null && this.phantom != carrier) return;
 
-        // Si el pasajero muere, el phantom muere con el.
         if (!rider.isAlive()) {
             carrier.setRiderGoal(null);
             carrier.kill();
@@ -124,6 +131,9 @@ public class PhantomRiderGoal extends Goal {
             if (returning) {
                 cancelReturn(carrier);
             }
+            if (target != sensed) {
+                committedDrop = null;
+            }
             target = sensed;
             carrier.setTransportTarget(sensed);
         } else if (!returning) {
@@ -131,88 +141,100 @@ public class PhantomRiderGoal extends Goal {
             return;
         }
 
-        // La altura ya la controla DeliverPassengerGoal con ceilingBlocked:
-        // corregirla aqui peleaba con la navegacion (sube, baja, sube, baja...).
         Mob passenger = carrier.getFirstPassenger() instanceof Mob m ? m : null;
+        if (passenger == null) return;
 
-        // Nunca soltar en el aire: suelo solido debajo y el cuerpo del jinete
-        // sin intersectar bloques (isSafeSurface era demasiado rígido aquí).
-        boolean floorBelow = carrier.level().getBlockState(carrier.blockPosition().below()).isSolid();
-        boolean safeHere = passenger != null && floorBelow && riderFits(carrier, passenger);
-        if (!safeHere) return;
-
-        // Entrega por proximidad VA PRIMERO: aunque el goal siga en modo techo,
-        // si el phantom ya esta fisicamente en el destino hay que soltar.
-        if (isCloseToDropPoint(carrier)) {
-            deliverAt(carrier, carrier.blockPosition());
-            return;
-        }
-
-        // Con un techo de por medio no entregamos por el nodo del pathfinder:
-        // ese nodo esta debajo del techo, no en el destino.
-        if (carrier.isCeilingBlocked()) return;
-
-        // Si no, usamos el ultimo nodo seguro que encontro el pathfinder.
-        BlockPos landing = carrier.getLandingPos();
-        if (landing != null) {
-            deliverAt(carrier, landing);
-        }
-    }
-
-    /** El cuerpo del jinete (con un pequeño margen) no toca ningún bloque. */
-    private boolean riderFits(CustomPhantom carrier, Mob rider) {
-        return carrier.level().getBlockStates(rider.getBoundingBox().deflate(0.01D))
-                .noneMatch(BlockState::isSolid);
-    }
-
-    /**
-     * Comprueba si el phantom esta lo bastante cerca del sitio de entrega. Con
-     * objetivo vivo se usa medio bloque de margen; al volver a un bloque
-     * concreto se permite un bloque, sin exigir la coordenada exacta. La
-     * superficie segura se comprueba aparte en {@link #checkDelivery}.
-     */
-    private boolean isCloseToDropPoint(CustomPhantom carrier) {
-        Vec3 destination;
-        double radius;
-        if (returning) {
-            if (origin == null) return false;
-            destination = Vec3.atCenterOf(origin);
-            radius = BLOCK_DROP_RADIUS;
+        BlockPos stand = null;
+        if (committedDrop != null && isSafeStand(carrier, passenger, committedDrop)
+                && isNearCommitted(committedDrop, carrier)) {
+            stand = committedDrop;
         } else {
-            if (target == null || !target.isAlive()) return false;
-            destination = target.position();
-            radius = TARGET_DROP_RADIUS;
+            if (committedDrop != null) {
+                committedDrop = null;
+            }
+
+            BlockPos destination;
+            if (returning && origin != null && isSafeStand(carrier, passenger, origin)) {
+                destination = origin;
+            } else if (!returning && target != null && target.isAlive()) {
+                destination = target.getOnPos().above();
+            } else {
+                destination = carrier.blockPosition();
+            }
+
+            double dx = carrier.getX() - (destination.getX() + 0.5D);
+            double dz = carrier.getZ() - (destination.getZ() + 0.5D);
+            double dy = carrier.getY() - (destination.getY() + 0.5D);
+            boolean inArrivalZone = dx * dx + dz * dz <= ARRIVAL_HORIZONTAL_SQ
+                    && Math.abs(dy) <= ARRIVAL_VERTICAL;
+            if (!inArrivalZone) {
+                return;
+            }
+
+            stand = findSafeStand(carrier, passenger);
+            if (stand == null) {
+                if (!carrier.isCeilingBlocked()) {
+                    carrier.clearLanding();
+                }
+                return;
+            }
+            committedDrop = stand;
         }
 
-        double dx = carrier.getX() - destination.x;
-        double dy = carrier.getY() - destination.y;
-        double dz = carrier.getZ() - destination.z;
-        return dx * dx + dz * dz <= radius * radius
-                && Math.abs(dy) <= DROP_Y_TOLERANCE;
+        deliverAt(carrier, stand);
     }
 
-    /** Objetivo perdido: el phantom vuela de vuelta al punto original con el jinete. */
+    private boolean isNearCommitted(BlockPos stand, CustomPhantom carrier) {
+        double dx = carrier.getX() - (stand.getX() + 0.5D);
+        double dz = carrier.getZ() - (stand.getZ() + 0.5D);
+        double dy = carrier.getY() - (stand.getY() + 0.5D);
+        return dx * dx + dz * dz <= 4.0D && dy >= -0.5D && dy <= 3.5D;
+    }
+
+    private BlockPos findSafeStand(CustomPhantom carrier, Mob passenger) {
+        BlockPos here = carrier.blockPosition();
+        int[] ys = {0, -1, -2, -3};
+        for (int radius = 0; radius <= 1; radius++) {
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) continue;
+                    for (int dy : ys) {
+                        BlockPos stand = here.offset(dx, dy, dz);
+                        if (isSafeStand(carrier, passenger, stand)) return stand;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean isSafeStand(CustomPhantom carrier, Mob passenger, BlockPos stand) {
+        if (!carrier.level().getBlockState(stand.below()).isSolid()) return false;
+        AABB box = passenger.getBoundingBox().move(Vec3.atCenterOf(stand).subtract(passenger.position()));
+        return carrier.level().getBlockStates(box.deflate(0.01D)).noneMatch(BlockState::isSolid);
+    }
+
     private void beginReturn(CustomPhantom carrier) {
         if (returning) return;
         returning = true;
         target = null;
+        committedDrop = null;
         carrier.setTransportTarget(null);
         carrier.setReturnPos(origin != null ? origin : rider.getOnPos().above());
     }
 
-    /** Target nuevo: se cancela el regreso, pero se conserva la posicion original. */
     private void cancelReturn(CustomPhantom carrier) {
         returning = false;
+        committedDrop = null;
         carrier.setReturnPos(null);
     }
 
-    /** Suelta al pasajero y elimina el phantom. */
     private void deliverAt(CustomPhantom carrier, BlockPos stand) {
         float yRot = returning && origin != null ? originYRot : rider.getYRot();
         float xRot = returning && origin != null ? originXRot : rider.getXRot();
         rider.stopRiding();
-        // Soltar donde esta el phantom (ya ha llegado fisicamente): nada de tp.
-        rider.moveTo(carrier.getX(), carrier.getY(), carrier.getZ(), yRot, xRot);
+
+        rider.moveTo(stand.getX() + 0.5D, stand.getY(), stand.getZ() + 0.5D, yRot, xRot);
         rider.getNavigation().stop();
         rider.fallDistance = 0.0F;
 
@@ -222,7 +244,9 @@ public class PhantomRiderGoal extends Goal {
         delivered = true;
         returning = false;
         target = null;
+        committedDrop = null;
         origin = null;
+        carrier.setPickupPos(null);
         nextUseTick = rider.level().getGameTime() + COOLDOWN_TICKS;
     }
 
@@ -233,11 +257,13 @@ public class PhantomRiderGoal extends Goal {
                 rider.stopRiding();
             }
             phantom.setRiderGoal(null);
+            phantom.setPickupPos(null);
             phantom.discard();
             phantom = null;
         }
         target = null;
         origin = null;
+        committedDrop = null;
         returning = false;
     }
 }
