@@ -49,11 +49,11 @@ public class ZombieBridgeGoal extends Goal {
         if (target == null) return false;
 
 
-        boolean resuming = interruptedTarget == target;
-
         int levelDiff = target.blockPosition().getY() - mob.blockPosition().getY();
         double yDiff = verticalDistanceTo(target);
         double horizDist = horizontalDistanceTo(target);
+
+        boolean resuming = interruptedTarget == target;
 
         if (yDiff < -LEVEL_EPSILON) return false;
         if (horizDist > HORIZONTAL_RANGE) return false;
@@ -67,7 +67,7 @@ public class ZombieBridgeGoal extends Goal {
         boolean needsVertical   = yDiff >= requiredHeight
                 && levelDiff <= MAX_HEIGHT_DIFF;
 
-        boolean needsHorizontal = yDiff <= LEVEL_EPSILON && horizDist > 2.5 && isGapTowards(target);
+        boolean needsHorizontal = yDiff <= LEVEL_EPSILON && isGapTowards(target);
 
         if (!needsVertical && !needsHorizontal) return false;
 
@@ -88,7 +88,7 @@ public class ZombieBridgeGoal extends Goal {
 
         return switch (phase) {
             case VERTICAL   -> yDiff > LEVEL_EPSILON;
-            case HORIZONTAL -> horizontalDistanceTo(cachedTarget) > 1.5 && isGapTowards(cachedTarget);
+            case HORIZONTAL -> targetAbove(cachedTarget) || isGapTowards(cachedTarget);
         };
     }
 
@@ -105,7 +105,7 @@ public class ZombieBridgeGoal extends Goal {
             mob.getNavigation().moveTo(cachedTarget, 1.0);
         }
 
-        if (phase == Phase.VERTICAL && cachedTarget != null
+        if (cachedTarget != null
                 && verticalDistanceTo(cachedTarget) > LEVEL_EPSILON) {
             interruptedTarget = cachedTarget;
         }
@@ -128,6 +128,10 @@ public class ZombieBridgeGoal extends Goal {
             phase = Phase.HORIZONTAL;
             cooldown = 0;
             interruptedTarget = null;
+        } else if (phase == Phase.HORIZONTAL && targetAbove(cachedTarget)) {
+            phase = Phase.VERTICAL;
+            interruptedTarget = cachedTarget;
+            cooldown = 0;
         }
 
         if (cooldown > 0) {
@@ -175,8 +179,6 @@ public class ZombieBridgeGoal extends Goal {
         BlockPos below = feet.below();
 
         if (isAirOrVoid(below)) {
-            // Si debajo del hueco ya hay suelo, el mob puede bajar caminando:
-            // no hace falta poner soporte (evita construir a la mínima).
             if (!isSolid(below.below()) && canPlace(below)) {
                 placeBlock(below);
                 mob.swing(InteractionHand.MAIN_HAND);
@@ -191,13 +193,28 @@ public class ZombieBridgeGoal extends Goal {
 
         boolean nextHasFloor = isSolid(nextFloor);
         boolean nextIsClear  = !isSolid(nextFeet) && !isSolid(nextFeet.above());
+        boolean placed = false;
 
-        if (!nextHasFloor && nextIsClear) {
-            if (canPlace(nextFloor)) {
-                placeBlock(nextFloor);
-                mob.swing(InteractionHand.MAIN_HAND);
-                cooldown = PLACE_COOLDOWN;
+        if (!nextHasFloor && nextIsClear && canPlace(nextFloor)) {
+            placeBlock(nextFloor);
+            placed = true;
+        }
+
+        if (nextHasFloor && GoalDirections.isDiagonal(mob, cachedTarget)) {
+            Direction side = GoalDirections.secondary(mob, cachedTarget);
+            BlockPos cornerFloor = nextFloor.relative(side);
+            BlockPos cornerFeet = cornerFloor.above();
+            if (!isSolid(cornerFloor)
+                    && !isSolid(cornerFeet) && !isSolid(cornerFeet.above())
+                    && canPlace(cornerFloor)) {
+                placeBlock(cornerFloor);
+                placed = true;
             }
+        }
+
+        if (placed) {
+            mob.swing(InteractionHand.MAIN_HAND);
+            cooldown = PLACE_COOLDOWN;
         }
 
         mob.getMoveControl().setWantedPosition(
@@ -214,16 +231,25 @@ public class ZombieBridgeGoal extends Goal {
     }
 
     private boolean isGapTowards(LivingEntity target) {
+        BlockPos below = mob.blockPosition().below();
         Direction facing = GoalDirections.primary(mob, target);
-        BlockPos nextFloor = mob.blockPosition().below().relative(facing);
-        // Solo es hueco si no hay suelo un nivel más abajo: con suelo el mob
-        // baja y el pathfinder llega sin construir.
-        return isAirOrVoid(nextFloor) && !isSolid(nextFloor.below());
+
+        if (isGap(below.relative(facing))) return true;
+
+        if (GoalDirections.isDiagonal(mob, target)) {
+            Direction side = GoalDirections.secondary(mob, target);
+            if (isGap(below.relative(facing).relative(side))) return true;
+        }
+        return false;
+    }
+
+    private boolean isGap(BlockPos floor) {
+        return isAirOrVoid(floor) && !isSolid(floor.below());
     }
 
     private boolean isSolid(BlockPos pos) {
         BlockState state = mob.level().getBlockState(pos);
-        return !state.isAir() && state.isSolidRender(mob.level(), pos);
+        return !state.canBeReplaced() && !state.getCollisionShape(mob.level(), pos).isEmpty();
     }
 
     private boolean isAirOrVoid(BlockPos pos) {
@@ -253,5 +279,10 @@ public class ZombieBridgeGoal extends Goal {
 
     private double verticalDistanceTo(LivingEntity entity) {
         return entity.getY() - mob.getY();
+    }
+
+    private boolean targetAbove(LivingEntity target) {
+        return target.blockPosition().getY() > mob.blockPosition().getY()
+                || verticalDistanceTo(target) >= MIN_RESUME_HEIGHT - LEVEL_EPSILON;
     }
 }
