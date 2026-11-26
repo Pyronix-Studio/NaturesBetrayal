@@ -33,7 +33,8 @@ dependencies {
     implementation include("com.electronwill.night-config:toml:3.9.0")
     implementation include("com.electronwill.night-config:core:3.9.0")
 
-    compileOnly "es.pyronixstudio:Util:${utilLib}"
+    implementation include("es.pyronixstudio:Util:$utilLib")
+
     compileOnly fileTree(dir: "${rootDir}/libs", include: ['*.jar'])
     implementation fileTree(dir: "${rootDir}/depend", include: ['*.jar'])
 }

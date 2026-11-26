@@ -50,7 +50,13 @@ configurations {
 dependencies {
     implementation project(path: ':common', configuration: 'namedElements')
 
-    compileOnly "es.pyronixstudio:Util:${utilLib}"
+    jarJar(implementation("es.pyronixstudio:Util:$utilLib")) {
+        version {
+            strictly "[$utilLib]"
+            prefer "$utilLib"
+        }
+    }
+
     compileOnly fileTree(dir: "${rootDir}/libs", include: ['*.jar'])
     implementation fileTree(dir: "${rootDir}/depend", include: ['*.jar'])
 }
