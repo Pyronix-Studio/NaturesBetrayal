@@ -2,6 +2,10 @@ plugins {
     id 'net.neoforged.moddev'
 }
 
+repositories {
+    maven { url = 'https://maven.neoforged.net/releases' }
+}
+
 sourceSets.main.resources {
     srcDir('src/generated/resources')
     exclude("**/*.bbmodel")

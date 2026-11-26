@@ -36,6 +36,7 @@ run/
 common/run/
 fabric/run/
 neoforge/run/
+forge/run/
 !**/src/**/run/
 **/src/generated/**/.cache/
 repo/
@@ -45,3 +46,4 @@ repo/
 common/build/
 fabric/build/
 neoforge/build/
+forge/build/

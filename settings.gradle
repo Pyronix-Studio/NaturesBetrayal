@@ -2,7 +2,16 @@ pluginManagement {
     repositories {
         maven { url = 'https://maven.fabricmc.net/' }
         maven { url = 'https://maven.neoforged.net/releases' }
+        maven { url = 'https://maven.minecraftforge.net/' }
+
         gradlePluginPortal()
+    }
+
+    plugins {
+        id 'fabric-loom' version "${providers.gradleProperty('fabric_loom_version').get()}"
+        id 'net.neoforged.moddev' version "${providers.gradleProperty('neoforge_mdg_version').get()}"
+        id 'net.minecraftforge.gradle' version "${providers.gradleProperty('forge_gradle_version').get()}"
+        id 'net.minecraftforge.jarjar' version "${providers.gradleProperty('forge_jarJar_version').get()}"
     }
 }
 
@@ -10,3 +19,4 @@ rootProject.name = "Nature's Betrayal"
 include 'common'
 include 'fabric'
 include 'neoforge'
+include 'forge'

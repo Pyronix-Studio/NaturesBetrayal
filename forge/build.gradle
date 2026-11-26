@@ -1,0 +1,139 @@
+plugins {
+    id 'net.minecraftforge.gradle'
+    id 'net.minecraftforge.jarjar'
+}
+
+base {
+    archivesName = "${mod_id}-forge"
+}
+
+fgtools.configure('slimelauncher') {
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(project.java_version as int)
+    })
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += project(':common').sourceSets.main.java.srcDirs
+        }
+
+        resources {
+            srcDirs += project(':common').sourceSets.main.resources.srcDirs
+        }
+    }
+}
+
+sourceSets.main.resources {
+    srcDir 'src/generated/resources'
+
+    exclude '**/*.bbmodel'
+    exclude '**/.cache/**'
+}
+
+minecraft {
+    mappings channel: 'official', version: minecraft_version
+
+    runs {
+        configureEach {
+            workingDir.convention layout.projectDirectory.dir('run')
+
+            args "--mixin.config=${mod_id}.mixins.json"
+
+            systemProperty 'forge.logging.markers', 'REGISTRIES'
+            systemProperty 'forge.logging.console.level', 'debug'
+            systemProperty 'forge.enabledGameTestNamespaces', mod_id
+        }
+
+        register('client') {
+            mods {
+                "${mod_id}" {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        register('server') {
+            args '--nogui'
+
+            mods {
+                "${mod_id}" {
+                    source sourceSets.main
+                }
+            }
+        }
+
+        register('data') {
+            workingDir = layout.projectDirectory.dir('run-data')
+
+            args '--mod', mod_id,
+                    '--all',
+                    '--output', file('src/generated/resources').absolutePath,
+                    '--existing', file('src/main/resources').absolutePath
+
+            mods {
+                "${mod_id}" {
+                    source sourceSets.main
+                }
+            }
+        }
+    }
+}
+tasks.named('jar', Jar) {
+    manifest {
+        attributes(['MixinConfigs': "${mod_id}.mixins.json"])
+    }
+
+    enabled = false
+}
+
+jarJar.register() {
+    archiveClassifier = null
+}
+
+repositories {
+    minecraft.mavenizer(it)
+    maven fg.forgeMaven
+    maven fg.minecraftLibsMaven
+}
+
+dependencies {
+
+    implementation minecraft.dependency("net.minecraftforge:forge:${minecraft_version}-${forge_version}")
+
+    compileOnly('io.github.llamalad7:mixinextras-common:0.5.4')
+    annotationProcessor('io.github.llamalad7:mixinextras-common:0.5.4')
+    implementation(jarJar('io.github.llamalad7:mixinextras-forge:0.5.4'))
+
+    jarJar("es.pyronixstudio:Util:${utilLib}")
+
+    compileOnly fileTree(dir: "$rootDir/libs", include: ['*.jar'])
+
+    implementation fileTree(dir: "$rootDir/depend", include: ['*.jar'])
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.release = java_version as int
+}
+
+tasks.named('processResources', ProcessResources) {
+    def props = [mod_id                 : mod_id,
+                 mod_name               : mod_name,
+                 mod_license            : mod_license,
+                 mod_version            : project.version,
+                 forge_version          : forge_version,
+                 loader_version_range   : loader_version_range,
+                 minecraft_version_range: minecraft_version_range,
+                 java_version           : java_version]
+
+    inputs.properties props
+
+    filesMatching('META-INF/mods.toml') {
+        expand props
+    }
+    filesMatching('pack.mcmeta') {
+        expand props
+    }
+}

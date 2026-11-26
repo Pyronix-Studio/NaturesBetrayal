@@ -1,8 +1,3 @@
-plugins {
-    id 'fabric-loom' version "${fabric_loom_version}" apply false
-    id 'net.neoforged.moddev' version "${neoforge_mdg_version}" apply false
-}
-
 def versionPropsFile = file("version.properties")
 def versionProps = new Properties()
 if (versionPropsFile.exists()) {
@@ -27,12 +22,13 @@ subprojects {
     version = computedVersion
     repositories {
         mavenCentral()
-        maven { url = 'https://maven.fabricmc.net/' }
-        maven { url = 'https://maven.neoforged.net/releases' }
         maven {
             name = 'Pyronix'
             url = 'https://s3.pyronixstudio.es/maven'
         }
+    }
+    if (project.name == 'common') {
+        repositories.maven { url = 'https://maven.fabricmc.net/' }
     }
     java {
         toolchain {

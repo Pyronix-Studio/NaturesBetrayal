@@ -2,6 +2,10 @@ plugins {
     id 'fabric-loom'
 }
 
+repositories {
+    maven { url = 'https://maven.fabricmc.net/' }
+}
+
 base {
     archivesName = "${mod_id}-fabric"
 }
