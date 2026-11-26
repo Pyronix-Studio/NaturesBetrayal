@@ -19,7 +19,7 @@ public abstract class SwellGoalMixin {
     private Creeper creeper;
 
     @Inject(method = "canUse", at = @At("HEAD"), cancellable = true)
-    private void noLineOfSight(CallbackInfoReturnable<Boolean> cir) {
+    private void naturesBetrayal$canUse(CallbackInfoReturnable<Boolean> cir) {
         LivingEntity target = this.creeper.getTarget();
         if (target != null && !this.creeper.hasLineOfSight(target)) {
             cir.setReturnValue(false);
@@ -28,7 +28,7 @@ public abstract class SwellGoalMixin {
 
 
     @Inject(method = "stop", at = @At("HEAD"))
-    private void stop(CallbackInfo ci){
+    private void naturesBetrayal$stop(CallbackInfo ci){
         creeper.setSwellDir(-1);
     }
 

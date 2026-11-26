@@ -22,7 +22,7 @@ public abstract class NearestAttackableTargetGoalMixin {
     protected TargetingConditions targetConditions;
 
     @Inject(method = "<init>(Lnet/minecraft/world/entity/Mob;Ljava/lang/Class;IZZLjava/util/function/Predicate;)V", at = @At("TAIL"))
-    private void onInit(Mob mob, Class<?> targetType, int i, boolean bl, boolean bl2, @Nullable Predicate<LivingEntity>  predicate, CallbackInfo ci) {
+    private void naturesBetrayal$onInit(Mob mob, Class<?> targetType, int i, boolean mustSee, boolean mustReach, @Nullable Predicate<LivingEntity>  predicate, CallbackInfo ci) {
         boolean xrayEnable = NaturesBetrayalConfig.XRAY_TARGET.get();
         if(!xrayEnable)
             return;

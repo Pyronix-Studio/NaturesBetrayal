@@ -18,7 +18,7 @@ public abstract class SpiderTargetGoalMixin<T extends LivingEntity> extends Near
     }
 
     @Inject(method = "canUse", at = @At("HEAD"), cancellable = true)
-    private void canUse(CallbackInfoReturnable<Boolean> cir){
+    private void naturesBetrayal$canUse(CallbackInfoReturnable<Boolean> cir){
         if (NaturesBetrayalConfig.SPIDER_ATTACK_ON_LIGHT.get()) {
             cir.setReturnValue(super.canUse());
         }

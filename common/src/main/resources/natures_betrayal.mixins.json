@@ -7,7 +7,9 @@
     "mobs.injects.MobAttributeMixin",
     "mobs.injects.MobGoalMixin",
     "mobs.injects.NearestAttackableTargetGoalMixin",
+
     "mobs.injects.SpiderTargetGoalMixin",
+    "mobs.injects.GhastShootFireballGoalMixin",
     "mobs.injects.SwellGoalMixin"
   ],
   "injectors": {

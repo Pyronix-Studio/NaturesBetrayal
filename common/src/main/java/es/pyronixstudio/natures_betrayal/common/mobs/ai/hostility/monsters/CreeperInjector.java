@@ -1,5 +1,6 @@
 package es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.monsters;
 
+import es.pyronixstudio.natures_betrayal.common.config.NaturesBetrayalConfig;
 import es.pyronixstudio.natures_betrayal.common.mobs.ai.IClassTypeInjector;
 import es.pyronixstudio.natures_betrayal.common.mobs.goals.SwellGoalNotLineSight;
 import net.minecraft.world.entity.EntityType;
@@ -20,7 +21,8 @@ public class CreeperInjector implements IClassTypeInjector {
     @Override
     public void inject(PathfinderMob mob, GoalSelector goalSelector, GoalSelector targetSelector, EntityType<?> entityType, Level level) {
         Creeper creeper = (Creeper)mob;
-        goalSelector.addGoal(5, new SwellGoalNotLineSight(creeper));
+        if(NaturesBetrayalConfig.CREEPER_NOT_LINE_SIGHT.get())
+            goalSelector.addGoal(5, new SwellGoalNotLineSight(creeper));
 
     }
 }

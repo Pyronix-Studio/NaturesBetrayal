@@ -20,7 +20,7 @@ public abstract class MeleeAttackGoalMixin {
     private boolean followingTargetEvenIfNotSeen;
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void onInit(PathfinderMob mob, double speedModifier, boolean followingTargetEvenIfNotSeen, CallbackInfo ci) {
+    private void naturesBetrayal$onInit(PathfinderMob mob, double speedModifier, boolean followingTargetEvenIfNotSeen, CallbackInfo ci) {
         boolean xrayEnable = NaturesBetrayalConfig.XRAY_TARGET.get();
         if(xrayEnable){
             this.followingTargetEvenIfNotSeen = true;
