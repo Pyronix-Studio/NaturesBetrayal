@@ -1,0 +1,63 @@
+clone:
+  git:
+    image: woodpeckerci/plugin-git
+    settings:
+      lfs: false
+      use-ssh: true
+      ssh-key-private:
+        from_secret: PyronixSsh
+
+when:
+  - event: [push, manual]
+
+steps:
+  - name: build
+    image: bash
+    environment:
+      DISCORD_WEBHOOK:
+        from_secret: Discord_webhook
+    commands:
+      - curl -fsSL https://s3.pyronixstudio.es/dev/linux/discord.sh -o discord.sh
+      - chmod +x discord.sh
+      - ./discord.sh "STARTED"
+
+      - curl -fsSL https://s3.pyronixstudio.es/dev/linux/java.sh -o java.sh
+      - curl -fsSL https://s3.pyronixstudio.es/dev/linux/s3.sh -o s3.sh
+      - curl -fsSL https://s3.pyronixstudio.es/dev/linux/properties.sh -o properties.sh
+
+      - chmod +x java.sh s3.sh properties.sh gradlew
+      - source properties.sh gradle.properties
+      - source java.sh $JAVA_VERSION
+
+      - ./gradlew clean build
+
+
+  - name: upload-artifact
+    image: bash
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: Rustfs_access
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: Rustfs_secret
+    commands:
+      - source s3.sh
+      - source properties.sh gradle.properties
+
+      - rc cp neoforge/build/libs/*.jar pyronix/publico/minecraft/NaturesBetrayal/$MINECRAFT_VERSION/
+      - rc cp fabric/build/libs/*.jar pyronix/publico/minecraft/NaturesBetrayal/$MINECRAFT_VERSION/
+      - rc cp forge/build/libs/*.jar pyronix/publico/minecraft/NaturesBetrayal/$MINECRAFT_VERSION/
+    when:
+      - event: [push, manual]
+        status: [success]
+
+
+  - name: discord-notification
+    image: bash
+    environment:
+      DISCORD_WEBHOOK:
+        from_secret: Discord_webhook
+    commands:
+      - ./discord.sh "$CI_PIPELINE_STATUS"
+    when:
+      - event: [push, manual]
+        status: [success, failure]
