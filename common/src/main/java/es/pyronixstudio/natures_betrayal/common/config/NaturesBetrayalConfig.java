@@ -1,6 +1,6 @@
 package es.pyronixstudio.natures_betrayal.common.config;
 
-import es.pyronixstudio.natures_betrayal.common.mobs.ai.hostility.EnumAttackMode;
+import es.pyronixstudio.natures_betrayal.common.entity.ai.hostility.EnumAttackMode;
 
 import java.nio.file.Path;
 
@@ -12,6 +12,7 @@ public class NaturesBetrayalConfig {
     public static ConfigSpec.Entry<Boolean> SPIDER_ATTACK_ON_LIGHT;
     public static ConfigSpec.Entry<Boolean> CREEPER_NOT_LINE_SIGHT;
     public static ConfigSpec.Entry<Boolean> GHAST_NOT_LINE_SIGHT;
+    public static ConfigSpec.Entry<Float> SKELETON_MELEE_WEAPON;
 
     public NaturesBetrayalConfig(Path path){
         ConfigSpec.Builder builder = new ConfigSpec.Builder(path);
@@ -23,6 +24,8 @@ public class NaturesBetrayalConfig {
         SPIDER_ATTACK_ON_LIGHT = builder.comment("Allows spiders to target players even in well-lit areas").define("spider_target_light", true);
         CREEPER_NOT_LINE_SIGHT = builder.comment("Allows creepers to explode without having a direct line of sight to their target").define("creeper_not_line_sight", true);
         GHAST_NOT_LINE_SIGHT = builder.comment("Allows ghast to shoot without having a direct line of sight to their target").define("ghast_not_line_sight", true);
+
+        SKELETON_MELEE_WEAPON = builder.comment("Distance at which skeletons switch to their melee weapon").define("skeleton_melee_weapon", 3.5F);
 
         builder.build().load();
     }

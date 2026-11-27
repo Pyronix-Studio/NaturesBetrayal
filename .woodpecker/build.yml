@@ -28,7 +28,7 @@ steps:
       - chmod +x java.sh s3.sh properties.sh gradlew
       - source properties.sh gradle.properties
       - source java.sh $JAVA_VERSION
-
+      - ./java.sh 25
       - ./gradlew clean build
 
 

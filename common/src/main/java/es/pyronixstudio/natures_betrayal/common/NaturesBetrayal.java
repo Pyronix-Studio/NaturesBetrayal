@@ -14,7 +14,6 @@ public class NaturesBetrayal {
     public static final Logger LOGGER = LogUtils.getLogger();
     public static final String MOD_ID = "natures_betrayal";
     private static NaturesBetrayal INSTANCE;
-    public static Registries registries;
     private IModLoader iModLoader;
 
     public static void initialize(IModLoader iModLoader){
@@ -29,7 +28,7 @@ public class NaturesBetrayal {
 
     public static void onFinishPreInitialization() {
         new NaturesBetrayalConfig(resolveConfigPath());
-        registries = new Registries();
+        Registries registries = new Registries();
         registries.load();
     }
 
@@ -45,6 +44,10 @@ public class NaturesBetrayal {
 
     public static ResourceLocation resource(String path){
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    }
+
+    public static String key(String key){
+        return MOD_ID + ":" + key;
     }
 
 }

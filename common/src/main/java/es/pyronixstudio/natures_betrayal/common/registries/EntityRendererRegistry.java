@@ -1,7 +1,6 @@
 package es.pyronixstudio.natures_betrayal.common.registries;
 
-import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
-import es.pyronixstudio.natures_betrayal.common.mobs.entity.phantom.CustomPhantomRenderer;
+import es.pyronixstudio.natures_betrayal.common.entity.custom_phantom.CustomPhantomRenderer;
 import es.pyronixstudio.natures_betrayal.common.registries.DeferredRegistry.RegistryObject;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.world.entity.Entity;
@@ -20,7 +19,7 @@ public class EntityRendererRegistry {
     private final List<RendererEntry<?>> entries = new ArrayList<>();
 
     public EntityRendererRegistry() {
-        register(NaturesBetrayal.registries.ENTITY_TYPES.CUSTOM_PHANTOM, CustomPhantomRenderer::new);
+        register(Registries.ENTITY_TYPES.CUSTOM_PHANTOM, CustomPhantomRenderer::new);
     }
 
     public <T extends Entity> void register(RegistryObject<EntityType.Builder<T>, EntityType<T>> entityType, EntityRendererProvider<T> renderer) {

@@ -9,6 +9,7 @@
     "mobs.injects.NearestAttackableTargetGoalMixin",
 
     "mobs.injects.SpiderTargetGoalMixin",
+    "mobs.injects.SkeletonMixin",
     "mobs.injects.GhastShootFireballGoalMixin",
     "mobs.injects.SwellGoalMixin"
   ],

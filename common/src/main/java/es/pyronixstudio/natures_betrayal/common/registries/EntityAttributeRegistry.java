@@ -1,7 +1,6 @@
 package es.pyronixstudio.natures_betrayal.common.registries;
 
-import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
-import es.pyronixstudio.natures_betrayal.common.mobs.entity.phantom.CustomPhantom;
+import es.pyronixstudio.natures_betrayal.common.entity.custom_phantom.CustomPhantom;
 import es.pyronixstudio.natures_betrayal.common.registries.DeferredRegistry.RegistryObject;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
@@ -25,7 +24,7 @@ public class EntityAttributeRegistry {
     private final List<AttributeEntry<?>> entries = new ArrayList<>();
 
     public EntityAttributeRegistry() {
-        register(NaturesBetrayal.registries.ENTITY_TYPES.CUSTOM_PHANTOM,
+        register(Registries.ENTITY_TYPES.CUSTOM_PHANTOM,
                 CustomPhantom::createAttributes);
     }
 

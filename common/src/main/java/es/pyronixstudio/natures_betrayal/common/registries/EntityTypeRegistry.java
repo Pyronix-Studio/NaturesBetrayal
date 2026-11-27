@@ -1,6 +1,6 @@
 package es.pyronixstudio.natures_betrayal.common.registries;
 
-import es.pyronixstudio.natures_betrayal.common.mobs.entity.phantom.CustomPhantom;
+import es.pyronixstudio.natures_betrayal.common.entity.custom_phantom.CustomPhantom;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;

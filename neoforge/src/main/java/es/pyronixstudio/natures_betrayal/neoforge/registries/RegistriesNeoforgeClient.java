@@ -1,6 +1,6 @@
 package es.pyronixstudio.natures_betrayal.neoforge.registries;
 
-import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
+import es.pyronixstudio.natures_betrayal.common.registries.Registries;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
@@ -13,6 +13,6 @@ public class RegistriesNeoforgeClient {
 
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
-        NaturesBetrayal.registries.ENTITY_RENDERER.forEachEntity(event::registerEntityRenderer);
+        Registries.ENTITY_RENDERER.forEachEntity(event::registerEntityRenderer);
     }
 }
