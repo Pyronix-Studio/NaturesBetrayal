@@ -24,7 +24,7 @@
 @rem ##########################################################################
 
 @rem Set local scope for the variables with windows NT shell
-if "%OS%"=="Windows_NT" setlocal
+if "%OS%"=="Windows_NT" setlocal EnableDelayedExpansion
 
 set DIRNAME=%~dp0
 if "%DIRNAME%"=="" set DIRNAME=.
@@ -34,6 +34,22 @@ set APP_HOME=%DIRNAME%
 
 @rem Resolve any "." and ".." in APP_HOME to make it shorter.
 for %%i in ("%APP_HOME%") do set APP_HOME=%%~fi
+
+set PYRONIX_JAVA_ARG=
+set PYRONIX_JAVA_ROOT=%USERPROFILE%\.pyronix-toolchain\java
+if exist "%PYRONIX_JAVA_ROOT%" (
+    set PYRONIX_JAVA_PATHS=
+    for /d %%J in ("%PYRONIX_JAVA_ROOT%\*") do (
+        if exist "%%~J\bin\java.exe" (
+            if defined PYRONIX_JAVA_PATHS (
+                set PYRONIX_JAVA_PATHS=!PYRONIX_JAVA_PATHS!,%%~J
+            ) else (
+                set PYRONIX_JAVA_PATHS=%%~J
+            )
+        )
+    )
+    if defined PYRONIX_JAVA_PATHS set PYRONIX_JAVA_ARG="-Dorg.gradle.java.installations.paths=!PYRONIX_JAVA_PATHS!"
+)
 
 @rem Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 set DEFAULT_JVM_OPTS="-Xmx64m" "-Xms64m"
@@ -74,7 +90,7 @@ set CLASSPATH=%APP_HOME%\gradle\wrapper\gradle-wrapper.jar
 
 
 @rem Execute Gradle
-"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
+"%JAVA_EXE%" %DEFAULT_JVM_OPTS% %JAVA_OPTS% %GRADLE_OPTS% "-Dorg.gradle.appname=%APP_BASE_NAME%" -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %PYRONIX_JAVA_ARG% %*
 
 :end
 @rem End local scope for the variables with windows NT shell

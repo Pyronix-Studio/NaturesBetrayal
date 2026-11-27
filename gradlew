@@ -202,8 +202,24 @@ if "$cygwin" || "$msys" ; then
 fi
 
 
+PYRONIX_JAVA_PATHS=""
+if [ -d "$HOME/.pyronix-toolchain/java" ]; then
+    for PYRONIX_JDK in "$HOME"/.pyronix-toolchain/java/*; do
+        if [ -x "$PYRONIX_JDK/bin/java" ]; then
+            if [ -n "$PYRONIX_JAVA_PATHS" ]; then
+                PYRONIX_JAVA_PATHS="$PYRONIX_JAVA_PATHS,"
+            fi
+            PYRONIX_JAVA_PATHS="$PYRONIX_JAVA_PATHS$PYRONIX_JDK"
+        fi
+    done
+fi
+
 # Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
 DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+
+if [ -n "${PYRONIX_JAVA_PATHS:-}" ]; then
+    set -- "-Dorg.gradle.java.installations.paths=$PYRONIX_JAVA_PATHS" "$@"
+fi
 
 # Collect all arguments for the java command:
 #   * DEFAULT_JVM_OPTS, JAVA_OPTS, JAVA_OPTS, and optsEnvironmentVar are not allowed to contain shell fragments,
