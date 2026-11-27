@@ -1,5 +1,6 @@
 package es.pyronixstudio.natures_betrayal.common.entity.goals;
 
+import es.pyronixstudio.natures_betrayal.common.util.BlockUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.sounds.SoundSource;
@@ -155,8 +156,8 @@ public class ZombieBridgeGoal extends Goal {
         BlockPos above  = feet.above();
         BlockPos head   = feet.above(2);
 
-        if (!isSolid(ground)) return;
-        if (isSolid(above) || isSolid(head)) return;
+        if (!BlockUtils.isSolid(mob.level(), ground)) return;
+        if (BlockUtils.isSolid(mob.level(), above) || BlockUtils.isSolid(mob.level(), head)) return;
 
         double centerX = feet.getX() + 0.5;
         double centerZ = feet.getZ() + 0.5;
@@ -179,7 +180,7 @@ public class ZombieBridgeGoal extends Goal {
         BlockPos below = feet.below();
 
         if (isAirOrVoid(below)) {
-            if (!isSolid(below.below()) && canPlace(below)) {
+            if (!BlockUtils.isSolid(mob.level(), below.below()) && canPlace(below)) {
                 placeBlock(below);
                 mob.swing(InteractionHand.MAIN_HAND);
                 cooldown = PLACE_COOLDOWN;
@@ -191,8 +192,9 @@ public class ZombieBridgeGoal extends Goal {
         BlockPos nextFloor = below.relative(facing);
         BlockPos nextFeet  = feet.relative(facing);
 
-        boolean nextHasFloor = isSolid(nextFloor);
-        boolean nextIsClear  = !isSolid(nextFeet) && !isSolid(nextFeet.above());
+        boolean nextHasFloor = BlockUtils.isSolid(mob.level(), nextFloor);
+        boolean nextIsClear  = !BlockUtils.isSolid(mob.level(), nextFeet)
+                && !BlockUtils.isSolid(mob.level(), nextFeet.above());
         boolean placed = false;
 
         if (!nextHasFloor && nextIsClear && canPlace(nextFloor)) {
@@ -204,8 +206,9 @@ public class ZombieBridgeGoal extends Goal {
             Direction side = GoalDirections.secondary(mob, cachedTarget);
             BlockPos cornerFloor = nextFloor.relative(side);
             BlockPos cornerFeet = cornerFloor.above();
-            if (!isSolid(cornerFloor)
-                    && !isSolid(cornerFeet) && !isSolid(cornerFeet.above())
+            if (!BlockUtils.isSolid(mob.level(), cornerFloor)
+                    && !BlockUtils.isSolid(mob.level(), cornerFeet)
+                    && !BlockUtils.isSolid(mob.level(), cornerFeet.above())
                     && canPlace(cornerFloor)) {
                 placeBlock(cornerFloor);
                 placed = true;
@@ -244,12 +247,7 @@ public class ZombieBridgeGoal extends Goal {
     }
 
     private boolean isGap(BlockPos floor) {
-        return isAirOrVoid(floor) && !isSolid(floor.below());
-    }
-
-    private boolean isSolid(BlockPos pos) {
-        BlockState state = mob.level().getBlockState(pos);
-        return !state.canBeReplaced() && !state.getCollisionShape(mob.level(), pos).isEmpty();
+        return isAirOrVoid(floor) && !BlockUtils.isSolid(mob.level(), floor.below());
     }
 
     private boolean isAirOrVoid(BlockPos pos) {

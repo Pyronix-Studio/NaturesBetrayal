@@ -2,16 +2,16 @@ package es.pyronixstudio.natures_betrayal.common.entity.ai.hostility;
 
 import es.pyronixstudio.natures_betrayal.common.entity.ai.IClassTypeInjector;
 import es.pyronixstudio.natures_betrayal.common.entity.ai.hostility.animals.AttackModeInjector;
+import es.pyronixstudio.natures_betrayal.common.entity.ai.hostility.monsters.AttributesInjector;
 import es.pyronixstudio.natures_betrayal.common.entity.ai.hostility.monsters.CreeperInjector;
-import es.pyronixstudio.natures_betrayal.common.entity.ai.hostility.monsters.TargetRadiusInjector;
+import es.pyronixstudio.natures_betrayal.common.entity.ai.hostility.monsters.GhastInjector;
 import es.pyronixstudio.natures_betrayal.common.entity.ai.hostility.monsters.ZombieInjector;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.level.Level;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -27,7 +27,7 @@ public class HostilityInjectorManager {
     }
 
 
-    private final Set<IClassTypeInjector> specificHostibilyInjector = new HashSet<>();
+    private final Set<IClassTypeInjector> specificHostibilyInjector = new LinkedHashSet<>();
 
     private void registerInjector(Supplier<IClassTypeInjector> supplier) {
         registerInjector(supplier.get());
@@ -38,11 +38,11 @@ public class HostilityInjectorManager {
     }
 
     private void registersSpecificInjectors() {
-        registerInjector(TargetRadiusInjector::new);
+        registerInjector(AttributesInjector::new);
         registerInjector(AttackModeInjector::new);
-
         registerInjector(ZombieInjector::new);
         registerInjector(CreeperInjector::new);
+        registerInjector(GhastInjector::new);
     }
 
     public HostilityInjectorManager() {
@@ -50,16 +50,11 @@ public class HostilityInjectorManager {
     }
 
     public void inject(Mob mob, GoalSelector goalSelector, GoalSelector targetSelector, EntityType<?> entityType, Level level) {
-        if (mob instanceof PathfinderMob pathfinderMob) {
-            for (IClassTypeInjector classTypeInjector : specificHostibilyInjector) {
-                if (!classTypeInjector.instance(pathfinderMob))
-                    continue;
-                classTypeInjector.inject(pathfinderMob, goalSelector, targetSelector, entityType, level);
-            }
-
+        for (IClassTypeInjector classTypeInjector : specificHostibilyInjector) {
+            if (!classTypeInjector.instance(mob))
+                continue;
+            classTypeInjector.inject(mob, goalSelector, targetSelector, entityType, level);
         }
-
-
     }
 
 

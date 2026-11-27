@@ -71,7 +71,7 @@ public abstract class SkeletonMixin extends Monster {
 
     @Unique
     private boolean naturesBetrayal$isInMele(LivingEntity target){
-        float configDistance = NaturesBetrayalConfig.SKELETON_MELEE_WEAPON.get();
+        double configDistance = NaturesBetrayalConfig.SKELETON_MELEE_WEAPON.get();
         return distanceToSqr(target) < configDistance * configDistance;
     }
 

@@ -113,6 +113,7 @@ dependencies {
     implementation(jarJar('io.github.llamalad7:mixinextras-forge:0.5.4'))
 
     jarJar("es.pyronixstudio:Util:${utilLib}")
+    implementation "es.pyronixstudio:Util:${project.utilLib}"
 
     compileOnly fileTree(dir: "$rootDir/libs", include: ['*.jar'])
 

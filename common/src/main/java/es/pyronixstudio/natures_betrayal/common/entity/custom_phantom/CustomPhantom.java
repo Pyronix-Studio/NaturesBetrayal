@@ -1,5 +1,6 @@
 package es.pyronixstudio.natures_betrayal.common.entity.custom_phantom;
 
+import es.pyronixstudio.natures_betrayal.common.util.BlockUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
@@ -11,7 +12,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Node;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.AABB;
@@ -140,12 +140,24 @@ public class CustomPhantom extends FlyingMob {
         if (!(passenger instanceof Mob mob)) return;
         if (mob.getTarget() != null && mob.getTarget().isAlive()) return;
 
-        BlockPos saved = this.pickupPos;
+        dropNearOrBelow(mob, this.pickupPos);
+    }
+
+    public boolean dropPassengerAtNearestSafeBlock() {
+        Entity passenger = getFirstPassenger();
+        if (!(passenger instanceof Mob mob)) return false;
+
+        setReturnPos(null);
+        setPickupPos(null);
+        return dropNearOrBelow(mob, null);
+    }
+
+    private boolean dropNearOrBelow(Mob mob, @Nullable BlockPos saved) {
         if (saved != null) {
             BlockPos nearOrigin = findSafeAround(mob, saved, 2);
             if (nearOrigin != null) {
                 dropAt(mob, nearOrigin);
-                return;
+                return true;
             }
         }
 
@@ -153,19 +165,20 @@ public class CustomPhantom extends FlyingMob {
         BlockPos nearHere = findSafeAround(mob, from, 2);
         if (nearHere != null) {
             dropAt(mob, nearHere);
-            return;
+            return true;
         }
 
         for (int y = from.getY(); y >= level().dimensionType().minY(); y--) {
             BlockPos solid = new BlockPos(from.getX(), y, from.getZ());
-            if (!level().getBlockState(solid).isSolid()) continue;
+            if (!BlockUtils.isSolid(level(), solid)) continue;
 
             BlockPos stand = solid.above();
             if (isSafeStand(mob, stand)) {
                 dropAt(mob, stand);
-                return;
+                return true;
             }
         }
+        return false;
     }
 
     @Nullable
@@ -187,9 +200,10 @@ public class CustomPhantom extends FlyingMob {
     }
 
     private boolean isSafeStand(Mob mob, BlockPos stand) {
-        if (!level().getBlockState(stand.below()).isSolid()) return false;
+        if (!BlockUtils.isSolid(level(), stand.below())) return false;
         AABB box = mob.getBoundingBox().move(Vec3.atCenterOf(stand).subtract(mob.position()));
-        return level().getBlockStates(box.deflate(0.01D)).noneMatch(BlockState::isSolid);
+        return BlockPos.betweenClosedStream(box.deflate(0.01D))
+                .noneMatch(pos -> BlockUtils.isSolid(level(), pos));
     }
 
     private void dropAt(Mob mob, BlockPos stand) {
@@ -272,7 +286,7 @@ public class CustomPhantom extends FlyingMob {
             }
 
             if (ceilingBlocked) {
-                if (ceilingPos != null && !level().getBlockState(ceilingPos).isSolid()) {
+                if (ceilingPos != null && !BlockUtils.isSolid(level(), ceilingPos)) {
                     ceilingBlocked = false;
                     ceilingPos = null;
                     forceRepath = true;

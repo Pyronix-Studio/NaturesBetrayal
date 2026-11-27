@@ -2,6 +2,7 @@ package es.pyronixstudio.natures_betrayal.neoforge;
 
 import es.pyronixstudio.natures_betrayal.common.IModLoader;
 import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
+import es.pyronixstudio.natures_betrayal.neoforge.events.NeoforgeEvents;
 import es.pyronixstudio.natures_betrayal.neoforge.registries.RegistriesNeoforge;
 import es.pyronixstudio.natures_betrayal.neoforge.registries.RegistriesNeoforgeClient;
 import net.neoforged.bus.api.IEventBus;
@@ -20,6 +21,7 @@ public class NaturesBetrayalNeoforge implements IModLoader {
         NaturesBetrayal.onFinishPreInitialization();
         RegistriesNeoforge.register(modEventBus);
         RegistriesNeoforgeClient.register(modEventBus);
+        new NeoforgeEvents();
     }
 
     @Override

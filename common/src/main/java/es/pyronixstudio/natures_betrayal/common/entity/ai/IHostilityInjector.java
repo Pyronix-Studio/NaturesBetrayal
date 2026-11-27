@@ -2,9 +2,6 @@ package es.pyronixstudio.natures_betrayal.common.entity.ai;
 
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.PathfinderMob;
-import net.minecraft.world.entity.ai.attributes.AttributeMap;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
@@ -15,7 +12,7 @@ import java.util.List;
 
 public interface IHostilityInjector {
 
-    void inject(PathfinderMob mob, GoalSelector goalSelector, GoalSelector targetSelector, EntityType<?> entityType, Level level);
+    void inject(Mob mob, GoalSelector goalSelector, GoalSelector targetSelector, EntityType<?> entityType, Level level);
 
     default void borrarGoal(GoalSelector goalSelector, Class<? extends Goal> goalClazz){
         List<WrappedGoal> existing = new ArrayList<>(goalSelector.getAvailableGoals());
@@ -63,9 +60,5 @@ public interface IHostilityInjector {
             goalSelector.addGoal(wrappedGoal.getPriority() + cantidad, wrappedGoal.getGoal());
         }
     }
-    //TODO TIENE K VENIR DE CONFIG
-    default void setDefaultAttributes(Mob mob){
-        AttributeMap attributeMap = mob.getAttributes();
-        attributeMap.getInstance(Attributes.ATTACK_DAMAGE).setBaseValue(2.0D);
-    }
+
 }

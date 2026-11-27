@@ -5,7 +5,7 @@ import es.pyronixstudio.natures_betrayal.common.entity.custom_phantom.PhantomRid
 import es.pyronixstudio.natures_betrayal.common.entity.goals.MobBreakGoal;
 import es.pyronixstudio.natures_betrayal.common.entity.goals.ZombieBridgeGoal;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.ai.goal.WrappedGoal;
 import net.minecraft.world.entity.ai.goal.ZombieAttackGoal;
@@ -22,7 +22,7 @@ public class ZombieInjector implements IClassTypeInjector {
     }
 
     @Override
-    public void inject(PathfinderMob mob, GoalSelector goalSelector, GoalSelector targetSelector, EntityType<?> entityType, Level level) {
+    public void inject(Mob mob, GoalSelector goalSelector, GoalSelector targetSelector, EntityType<?> entityType, Level level) {
         desplazarGoals(2, goalSelector);
         WrappedGoal zombieAttack = cutWrappedGoal(goalSelector, ZombieAttackGoal.class);
         if (zombieAttack != null) {
@@ -33,8 +33,6 @@ public class ZombieInjector implements IClassTypeInjector {
             goalSelector.addGoal(priority + 2, zombieAttack.getGoal());
 
             goalSelector.addGoal(priority + 3, new PhantomRiderGoal(mob));
-
-
         }
     }
 }

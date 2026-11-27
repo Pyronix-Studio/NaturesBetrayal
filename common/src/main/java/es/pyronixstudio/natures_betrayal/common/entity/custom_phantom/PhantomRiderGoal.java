@@ -1,12 +1,12 @@
 package es.pyronixstudio.natures_betrayal.common.entity.custom_phantom;
 
-import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
-import es.pyronixstudio.natures_betrayal.common.registries.Registries;import net.minecraft.core.BlockPos;
+import es.pyronixstudio.natures_betrayal.common.registries.Registries;
+import es.pyronixstudio.natures_betrayal.common.util.BlockUtils;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -15,6 +15,7 @@ public class PhantomRiderGoal extends Goal {
 
     private static final double TRIGGER_Y_DIFF = 20.0;
     private static final int COOLDOWN_TICKS = 120;
+    private static final int RETURN_TIMEOUT_TICKS = 40 * 20;
 
     private static final double ARRIVAL_HORIZONTAL_SQ = 25.0;
     private static final double ARRIVAL_VERTICAL = 3.0;
@@ -24,6 +25,7 @@ public class PhantomRiderGoal extends Goal {
     private LivingEntity target;
     private boolean delivered;
     private boolean returning;
+    private long returnDeadline;
     private long nextUseTick;
 
     @Nullable
@@ -59,6 +61,7 @@ public class PhantomRiderGoal extends Goal {
     public void start() {
         delivered = false;
         returning = false;
+        returnDeadline = 0L;
         committedDrop = null;
         target = rider.getTarget();
         if (target == null || !(rider.level() instanceof ServerLevel serverLevel)) {
@@ -144,6 +147,12 @@ public class PhantomRiderGoal extends Goal {
         Mob passenger = carrier.getFirstPassenger() instanceof Mob m ? m : null;
         if (passenger == null) return;
 
+        if (returning && carrier.level().getGameTime() >= returnDeadline) {
+            if (forceDropNear(carrier)) return;
+            returnDeadline = carrier.level().getGameTime() + RETURN_TIMEOUT_TICKS;
+            return;
+        }
+
         BlockPos stand = null;
         if (committedDrop != null && isSafeStand(carrier, passenger, committedDrop)
                 && isNearCommitted(committedDrop, carrier)) {
@@ -184,6 +193,22 @@ public class PhantomRiderGoal extends Goal {
         deliverAt(carrier, stand);
     }
 
+    private boolean forceDropNear(CustomPhantom carrier) {
+        if (!(carrier.getFirstPassenger() instanceof Mob)) return false;
+        if (!carrier.dropPassengerAtNearestSafeBlock()) return false;
+
+        carrier.setRiderGoal(null);
+        phantom = null;
+        delivered = true;
+        returning = false;
+        returnDeadline = 0L;
+        target = null;
+        committedDrop = null;
+        origin = null;
+        nextUseTick = rider.level().getGameTime() + COOLDOWN_TICKS;
+        return true;
+    }
+
     private boolean isNearCommitted(BlockPos stand, CustomPhantom carrier) {
         double dx = carrier.getX() - (stand.getX() + 0.5D);
         double dz = carrier.getZ() - (stand.getZ() + 0.5D);
@@ -209,14 +234,16 @@ public class PhantomRiderGoal extends Goal {
     }
 
     private boolean isSafeStand(CustomPhantom carrier, Mob passenger, BlockPos stand) {
-        if (!carrier.level().getBlockState(stand.below()).isSolid()) return false;
+        if (!BlockUtils.isSolid(carrier.level(), stand.below())) return false;
         AABB box = passenger.getBoundingBox().move(Vec3.atCenterOf(stand).subtract(passenger.position()));
-        return carrier.level().getBlockStates(box.deflate(0.01D)).noneMatch(BlockState::isSolid);
+        return BlockPos.betweenClosedStream(box.deflate(0.01D))
+                .noneMatch(pos -> BlockUtils.isSolid(carrier.level(), pos));
     }
 
     private void beginReturn(CustomPhantom carrier) {
         if (returning) return;
         returning = true;
+        returnDeadline = carrier.level().getGameTime() + RETURN_TIMEOUT_TICKS;
         target = null;
         committedDrop = null;
         carrier.setTransportTarget(null);
@@ -225,6 +252,7 @@ public class PhantomRiderGoal extends Goal {
 
     private void cancelReturn(CustomPhantom carrier) {
         returning = false;
+        returnDeadline = 0L;
         committedDrop = null;
         carrier.setReturnPos(null);
     }
@@ -243,6 +271,7 @@ public class PhantomRiderGoal extends Goal {
         this.phantom = null;
         delivered = true;
         returning = false;
+        returnDeadline = 0L;
         target = null;
         committedDrop = null;
         origin = null;
@@ -265,5 +294,6 @@ public class PhantomRiderGoal extends Goal {
         origin = null;
         committedDrop = null;
         returning = false;
+        returnDeadline = 0L;
     }
 }

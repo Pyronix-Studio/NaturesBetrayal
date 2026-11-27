@@ -4,7 +4,7 @@ import es.pyronixstudio.natures_betrayal.common.config.NaturesBetrayalConfig;
 import es.pyronixstudio.natures_betrayal.common.entity.ai.IClassTypeInjector;
 import es.pyronixstudio.natures_betrayal.common.entity.goals.SwellGoalNotLineSight;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.monster.Creeper;
 import net.minecraft.world.level.Level;
@@ -19,10 +19,9 @@ public class CreeperInjector implements IClassTypeInjector {
     }
 
     @Override
-    public void inject(PathfinderMob mob, GoalSelector goalSelector, GoalSelector targetSelector, EntityType<?> entityType, Level level) {
-        Creeper creeper = (Creeper)mob;
-        if(NaturesBetrayalConfig.CREEPER_NOT_LINE_SIGHT.get())
+    public void inject(Mob mob, GoalSelector goalSelector, GoalSelector targetSelector, EntityType<?> entityType, Level level) {
+        Creeper creeper = (Creeper) mob;
+        if (NaturesBetrayalConfig.CREEPER_NOT_LINE_SIGHT.get())
             goalSelector.addGoal(5, new SwellGoalNotLineSight(creeper));
-
     }
 }

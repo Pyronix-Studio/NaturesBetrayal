@@ -13,7 +13,7 @@ def major = versionProps["major"].toInteger()
 def minor = versionProps["minor"].toInteger()
 def patch = versionProps["patch"].toInteger()
 def baseVersion = "${major}.${minor}.${patch}"
-def buildNumber = System.getenv("BUILD_NUMBER") ?: "0"
+def buildNumber = System.getenv("CI_PIPELINE_NUMBER") ?: "0"
 def computedVersion = "${baseVersion}+${buildNumber}"
 
 subprojects {

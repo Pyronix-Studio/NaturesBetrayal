@@ -2,7 +2,9 @@ package es.pyronixstudio.natures_betrayal.common;
 
 import com.mojang.logging.LogUtils;
 import es.pyronixstudio.natures_betrayal.common.config.NaturesBetrayalConfig;
+import es.pyronixstudio.natures_betrayal.common.events.Events;
 import es.pyronixstudio.natures_betrayal.common.registries.Registries;
+import es.pyronixstudio.util.events.EventHandler;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 
@@ -13,6 +15,8 @@ public class NaturesBetrayal {
 
     public static final Logger LOGGER = LogUtils.getLogger();
     public static final String MOD_ID = "natures_betrayal";
+    public static final EventHandler eventHandler = new EventHandler();
+
     private static NaturesBetrayal INSTANCE;
     private IModLoader iModLoader;
 
@@ -30,6 +34,7 @@ public class NaturesBetrayal {
         new NaturesBetrayalConfig(resolveConfigPath());
         Registries registries = new Registries();
         registries.load();
+        Events.start();
     }
 
     private static Path resolveConfigPath(){

@@ -1,11 +1,11 @@
 package es.pyronixstudio.natures_betrayal.common.entity.custom_phantom;
 
+import es.pyronixstudio.natures_betrayal.common.util.BlockUtils;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.protocol.game.DebugPackets;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.FlyNodeEvaluator;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.pathfinder.PathFinder;
@@ -73,7 +73,7 @@ public class PhantomFlightNavigation extends PathNavigation {
 
     @Override
     public boolean isStableDestination(BlockPos pos) {
-        return !this.level.getBlockState(pos).isSolid();
+        return !BlockUtils.isSolid(this.level, pos);
     }
 
     /** Igual que el tick de vuelo vanilla, pero con nuestro PathFinder. */
@@ -131,7 +131,7 @@ public class PhantomFlightNavigation extends PathNavigation {
     public int firstCeilingBelow(BlockPos from, int toY) {
         int top = Math.min(toY, this.level.getMaxBuildHeight() - 1);
         for (int y = from.getY() + 1; y <= top; y++) {
-            if (this.level.getBlockState(from.atY(y)).isSolid()) {
+            if (BlockUtils.isSolid(this.level, from.atY(y))) {
                 return y;
             }
         }
@@ -148,8 +148,8 @@ public class PhantomFlightNavigation extends PathNavigation {
         BlockPos stand = column.atY(ceilingY - 2);
         for (int y = stand.getY(); y >= column.getY() - 6; y--) {
             BlockPos p = stand.atY(y);
-            if (!this.level.getBlockState(p).isSolid()
-                    && !this.level.getBlockState(p.above()).isSolid()) {
+            if (!BlockUtils.isSolid(this.level, p)
+                    && !BlockUtils.isSolid(this.level, p.above())) {
                 return p;
             }
         }
@@ -195,13 +195,12 @@ public class PhantomFlightNavigation extends PathNavigation {
 
     /** Suelo solido debajo + hueco para el phantom y el jinete. */
     public boolean isSafeSurface(BlockPos pos) {
-        if (!this.level.getBlockState(pos.below()).isSolid()) {
+        if (!BlockUtils.isSolid(this.level, pos.below())) {
             return false;
         }
         // 2 bloques de hueco contando el propio bloque (dy=0 y dy=1).
         for (int dy = 0; dy < RIDER_HEAD_CLEARANCE; dy++) {
-            BlockState state = this.level.getBlockState(pos.above(dy));
-            if (state.isSolid()) {
+            if (BlockUtils.isSolid(this.level, pos.above(dy))) {
                 return false;
             }
         }

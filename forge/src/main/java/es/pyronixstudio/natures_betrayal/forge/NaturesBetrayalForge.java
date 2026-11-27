@@ -2,6 +2,7 @@ package es.pyronixstudio.natures_betrayal.forge;
 
 import es.pyronixstudio.natures_betrayal.common.IModLoader;
 import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
+import es.pyronixstudio.natures_betrayal.forge.events.ForgeEvents;
 import es.pyronixstudio.natures_betrayal.forge.registries.RegistriesForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
@@ -16,6 +17,7 @@ public class NaturesBetrayalForge implements IModLoader {
         NaturesBetrayal.initialize(this);
         NaturesBetrayal.onFinishPreInitialization();
         RegistriesForge.register(context.getModEventBus());
+        new ForgeEvents();
     }
 
     @Override

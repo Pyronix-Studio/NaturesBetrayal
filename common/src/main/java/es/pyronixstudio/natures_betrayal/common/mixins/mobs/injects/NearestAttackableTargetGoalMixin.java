@@ -1,6 +1,7 @@
 package es.pyronixstudio.natures_betrayal.common.mixins.mobs.injects;
 
 import es.pyronixstudio.natures_betrayal.common.config.NaturesBetrayalConfig;
+import es.pyronixstudio.natures_betrayal.common.mixins.mobs.accessor.TargetGoalAccessor;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
@@ -29,6 +30,7 @@ public abstract class NearestAttackableTargetGoalMixin {
         if(!Player.class.isAssignableFrom(targetType))
            return;
         targetConditions.ignoreLineOfSight();
+        ((TargetGoalAccessor) this).naturesBetrayal$setMustSee(false);
     }
 
 }

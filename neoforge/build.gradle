@@ -60,6 +60,7 @@ dependencies {
             prefer "$utilLib"
         }
     }
+    additionalRuntimeClasspath "es.pyronixstudio:Util:${project.utilLib}"
 
     compileOnly fileTree(dir: "${rootDir}/libs", include: ['*.jar'])
     implementation fileTree(dir: "${rootDir}/depend", include: ['*.jar'])

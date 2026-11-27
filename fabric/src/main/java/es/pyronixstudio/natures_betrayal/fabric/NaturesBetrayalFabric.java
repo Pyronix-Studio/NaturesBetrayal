@@ -2,6 +2,7 @@ package es.pyronixstudio.natures_betrayal.fabric;
 
 import es.pyronixstudio.natures_betrayal.common.IModLoader;
 import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
+import es.pyronixstudio.natures_betrayal.fabric.events.FabricEvents;
 import es.pyronixstudio.natures_betrayal.fabric.registries.RegistriesFabric;
 import es.pyronixstudio.natures_betrayal.fabric.registries.RegistriesFabricClient;
 import net.fabricmc.api.ClientModInitializer;
@@ -18,6 +19,7 @@ public class NaturesBetrayalFabric implements ModInitializer, ClientModInitializ
         NaturesBetrayal.initialize(this);
         NaturesBetrayal.onFinishPreInitialization();
         RegistriesFabric.register();
+        FabricEvents.register();
     }
 
     @Override

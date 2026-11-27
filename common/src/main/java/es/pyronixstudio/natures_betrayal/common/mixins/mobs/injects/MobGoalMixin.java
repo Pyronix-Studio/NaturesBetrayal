@@ -25,8 +25,7 @@ public abstract class MobGoalMixin {
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void naturesBetrayal$registerGoals(EntityType<?> entityType, Level level, CallbackInfo callbackInfo) {
-        if(level.isClientSide())
-            return;
+        if (level.isClientSide()) return;
         Mob self = (Mob) (Object) this;
         HostilityInjectorManager.getManager().inject(self, goalSelector, targetSelector, entityType, level);
 
