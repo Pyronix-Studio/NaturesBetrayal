@@ -19,6 +19,8 @@ public class NaturesBetrayal {
 
     private static NaturesBetrayal INSTANCE;
     private IModLoader iModLoader;
+    private final Registries registries = new Registries();
+
 
     public static void initialize(IModLoader iModLoader){
         if(INSTANCE == null){
@@ -32,9 +34,12 @@ public class NaturesBetrayal {
 
     public static void onFinishPreInitialization() {
         new NaturesBetrayalConfig(resolveConfigPath());
-        Registries registries = new Registries();
-        registries.load();
+        INSTANCE.registries.load();
         Events.start();
+    }
+
+    public static void onFinishPreInitializationClient(){
+        INSTANCE.registries.loadClientRegistries();
     }
 
     private static Path resolveConfigPath(){

@@ -181,9 +181,9 @@ public class MobBreakGoal extends Goal {
         if (hardness < 0) return Float.MAX_VALUE;
         if (hardness == 0) return 1f;
 
-        boolean correctTool = itemInHand.isCorrectToolForDrops(state);
-        float divisor = correctTool ? 30f : 100f;
-
+        //boolean correctTool = itemInHand.isCorrectToolForDrops(state);
+        //float divisor = correctTool ? 30f : 100f;
+        float divisor = 30.0F;
         return (hardness * divisor) / speed;
     }
 

@@ -1,6 +1,6 @@
 package es.pyronixstudio.natures_betrayal.common.events;
 
-import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;import es.pyronixstudio.natures_betrayal.common.config.NaturesBetrayalConfig;import es.pyronixstudio.natures_betrayal.common.events.core.PlayerSleepAttemptEvent;
+import es.pyronixstudio.natures_betrayal.common.config.NaturesBetrayalConfig;
 import es.pyronixstudio.util.events.EventListener;
 import es.pyronixstudio.util.events.Subscribe;
 import net.minecraft.ChatFormatting;

@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.state.BlockState;
 
 import java.util.EnumSet;
 
-public class ZombieBridgeGoal extends Goal {
+public class BridgeGoal extends Goal {
 
     private static final int PLACE_COOLDOWN = 12;
     private static final int MAX_HEIGHT_DIFF = 19;
@@ -35,7 +35,7 @@ public class ZombieBridgeGoal extends Goal {
     private LivingEntity cachedTarget = null;
     private Phase phase = Phase.VERTICAL;
 
-    public ZombieBridgeGoal(Mob mob) {
+    public BridgeGoal(Mob mob) {
         this.mob = mob;
         this.setFlags(EnumSet.of(Flag.LOOK, Flag.MOVE));
     }

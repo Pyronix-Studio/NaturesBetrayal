@@ -17,6 +17,7 @@ public class NaturesBetrayalForge implements IModLoader {
         NaturesBetrayal.initialize(this);
         NaturesBetrayal.onFinishPreInitialization();
         RegistriesForge.register(context.getModEventBus());
+
         new ForgeEvents();
     }
 

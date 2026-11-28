@@ -16,8 +16,11 @@ public class Registries {
         if (loaded) return;
         ENTITY_TYPES = new EntityTypeRegistry();
         ENTITY_ATTRIBUTES = new EntityAttributeRegistry();
-        ENTITY_RENDERER = new EntityRendererRegistry();
         KEYS = new KeysRegistry();
         loaded = true;
+    }
+
+    public void loadClientRegistries(){
+        ENTITY_RENDERER = new EntityRendererRegistry();
     }
 }

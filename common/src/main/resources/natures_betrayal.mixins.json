@@ -7,13 +7,18 @@
     "mobs.injects.FishMixin",
     "mobs.injects.FishMoveControlMixin",
     "mobs.injects.GhastShootFireballGoalMixin",
+    "mobs.injects.HurtByTargerGoalMixin",
     "mobs.injects.MeleeAttackGoalMixin",
     "mobs.injects.MobAttributeMixin",
     "mobs.injects.MobGoalMixin",
+    "mobs.injects.MobMixin",
     "mobs.injects.NearestAttackableTargetGoalMixin",
+    "mobs.injects.PoisonMobEffectMixin",
+    "mobs.injects.SkeletonAimBotMixin",
     "mobs.injects.SkeletonMixin",
     "mobs.injects.SpiderTargetGoalMixin",
-    "mobs.injects.SwellGoalMixin"
+    "mobs.injects.SwellGoalMixin",
+    "mobs.injects.TargetingConditionsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

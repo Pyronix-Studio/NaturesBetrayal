@@ -5,11 +5,11 @@ import es.pyronixstudio.natures_betrayal.common.entity.ai.hostility.animals.Atta
 import es.pyronixstudio.natures_betrayal.common.entity.ai.hostility.monsters.AttributesInjector;
 import es.pyronixstudio.natures_betrayal.common.entity.ai.hostility.monsters.CreeperInjector;
 import es.pyronixstudio.natures_betrayal.common.entity.ai.hostility.monsters.GhastInjector;
-import es.pyronixstudio.natures_betrayal.common.entity.ai.hostility.monsters.ZombieInjector;
+import es.pyronixstudio.natures_betrayal.common.entity.ai.hostility.monsters.SpiderInjector;import es.pyronixstudio.natures_betrayal.common.entity.ai.hostility.monsters.ZombieInjector;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
-import net.minecraft.world.level.Level;
+import net.minecraft.world.entity.monster.Spider;import net.minecraft.world.level.Level;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -40,6 +40,7 @@ public class HostilityInjectorManager {
     private void registersSpecificInjectors() {
         registerInjector(AttributesInjector::new);
         registerInjector(AttackModeInjector::new);
+        registerInjector(SpiderInjector::new);
         registerInjector(ZombieInjector::new);
         registerInjector(CreeperInjector::new);
         registerInjector(GhastInjector::new);

@@ -27,6 +27,12 @@ neoForge {
     }
 
     runs {
+
+        clientAuth {
+            client()
+            devLogin = true
+        }
+
         client {
             client()
             systemProperty 'neoforge.enabledGameTestNamespaces', mod_id
@@ -87,3 +93,11 @@ sourceSets.main.resources.srcDirs += project(':common').sourceSets.main.resource
 
 sourceSets.main.resources.srcDir generateModMetadata
 neoForge.ideSyncTask generateModMetadata
+
+tasks.register('copiarDedicao', Exec) {
+    if (org.gradle.internal.os.OperatingSystem.current().isWindows()) {
+        commandLine 'cmd', '/c', 'copiarADedico.bat'
+    } else {
+        commandLine 'sh', 'copiarADedico.sh'
+    }
+}

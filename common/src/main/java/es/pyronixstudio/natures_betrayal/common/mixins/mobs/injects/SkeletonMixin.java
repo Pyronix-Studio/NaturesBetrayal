@@ -36,7 +36,6 @@ public abstract class SkeletonMixin extends Monster {
         super(entityType, level);
     }
 
-
     @Inject(method = "populateDefaultEquipmentSlots", at = @At("TAIL"))
     private void naturesBetrayal$populateDefaultEquipmentSlots(RandomSource random, DifficultyInstance difficulty, CallbackInfo ci){
         naturesBetrayal$rangedWeapon = getWeaponItem();

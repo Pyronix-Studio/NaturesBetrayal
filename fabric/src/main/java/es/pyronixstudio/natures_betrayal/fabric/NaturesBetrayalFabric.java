@@ -24,6 +24,7 @@ public class NaturesBetrayalFabric implements ModInitializer, ClientModInitializ
 
     @Override
     public void onInitializeClient() {
+        NaturesBetrayal.onFinishPreInitializationClient();
         RegistriesFabricClient.register();
     }
 

@@ -1,7 +1,7 @@
 package es.pyronixstudio.natures_betrayal.fabric.events;
 
 import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
-import es.pyronixstudio.natures_betrayal.common.events.core.PlayerSleepAttemptEvent;
+import es.pyronixstudio.natures_betrayal.common.events.PlayerSleepAttemptEvent;
 import net.fabricmc.fabric.api.entity.event.v1.EntitySleepEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.player.Player;

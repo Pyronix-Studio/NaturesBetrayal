@@ -1,7 +1,7 @@
 package es.pyronixstudio.natures_betrayal.neoforge.events;
 
 import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
-import es.pyronixstudio.natures_betrayal.common.events.core.PlayerSleepAttemptEvent;
+import es.pyronixstudio.natures_betrayal.common.events.PlayerSleepAttemptEvent;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.player.CanPlayerSleepEvent;
 

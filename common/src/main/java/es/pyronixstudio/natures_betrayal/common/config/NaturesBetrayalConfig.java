@@ -9,7 +9,8 @@ public class NaturesBetrayalConfig {
     private static final int MAX_FOLLOW_RANGE = 2048;
     private static final double MAX_DISTANCE = Integer.MAX_VALUE;
 
-    public  static ConfigSpec.Entry<Boolean> CAN_SLEEP;
+    public static ConfigSpec.Entry<Boolean> CAN_SLEEP;
+    public static ConfigSpec.Entry<Boolean> POISON_CAN_KILL;
 
     public static ConfigSpec.EnumEntry<EnumAttackMode> ATTACK_MODE;
     public static ConfigSpec.Entry<Double> ATTACK_DAMAGE;
@@ -43,6 +44,7 @@ public class NaturesBetrayalConfig {
         XRAY_TARGET = generalSection.comment("If true, mobs can detect and target players through walls and blocks").define("xray_target", true);
         GROUND_MOVEMENT_SPEED_MODIFIER = generalSection.comment("Speed multiplier for land mobs while chasing a target").define("ground_movement_speed_modifier", 1.2D, 0.0D, 1024.0D);
         WATER_MOVEMENT_SPEED_MODIFIER = generalSection.comment("Swimming speed multiplier, horizontal and vertical").define("water_movement_speed_modifier", 1.0D, 0.0D, 1024.0D);
+        POISON_CAN_KILL = generalSection.comment("Pison can kill").define("poison_can_kill", true);
 
         generalSection.pop();
 

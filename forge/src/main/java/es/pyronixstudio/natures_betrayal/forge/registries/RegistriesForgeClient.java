@@ -10,6 +10,10 @@ import net.minecraftforge.fml.common.Mod;
 @Mod.EventBusSubscriber(modid = NaturesBetrayal.MOD_ID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class RegistriesForgeClient {
 
+    public RegistriesForgeClient(){
+        NaturesBetrayal.onFinishPreInitializationClient();
+    }
+
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         Registries.ENTITY_RENDERER.forEachEntity(event::registerEntityRenderer);

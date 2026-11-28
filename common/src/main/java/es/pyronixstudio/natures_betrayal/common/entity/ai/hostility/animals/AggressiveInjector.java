@@ -7,8 +7,10 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.GoalSelector;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.animal.WaterAnimal;
+import net.minecraft.world.entity.monster.Skeleton;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
@@ -25,7 +27,9 @@ public class AggressiveInjector implements IHostilityInjector {
         if (!containsGoal(goalSelector, MeleeAttackGoal.class))
             goalSelector.addGoal(0, new MeleeAttackGoal(pf, speedModifier, true));
 
-        if (!containsGoal(targetSelector, NearestAttackableTargetGoal.class))
-            targetSelector.addGoal(0, new NearestAttackableTargetGoal<>(mob, Player.class, false, false));
+        if (!containsGoal(targetSelector, NearestAttackableTargetGoal.class)) {
+            targetSelector.addGoal(0, new HurtByTargetGoal(pf));
+            targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(pf, Player.class, false, false));
+        }
     }
 }
