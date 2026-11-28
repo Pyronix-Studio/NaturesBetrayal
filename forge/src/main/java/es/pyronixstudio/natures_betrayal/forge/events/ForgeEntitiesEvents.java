@@ -1,7 +1,7 @@
 package es.pyronixstudio.natures_betrayal.forge.events;
 
 import es.pyronixstudio.natures_betrayal.common.NaturesBetrayal;
-import es.pyronixstudio.natures_betrayal.common.events.core.PlayerSleepAttemptEvent;
+import es.pyronixstudio.natures_betrayal.common.events.PlayerSleepAttemptEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
